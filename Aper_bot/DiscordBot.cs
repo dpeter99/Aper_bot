@@ -1,4 +1,5 @@
 ﻿using Aper_bot.EventBus;
+using Aper_bot.Util;
 
 using DSharpPlus;
 using DSharpPlus.Entities;
@@ -18,27 +19,30 @@ using System.Threading.Tasks;
 
 namespace Aper_bot
 {
-    class DiscordBot : IHostedService
+     class DiscordBot : Singleton<DiscordBot>, IHostedService
     {
-        DiscordClient client;
+
+        public DiscordClient Client { get; private set; }
 
         ILogger Log;
         IEventBus eventBus;
 
         public DiscordBot(ILogger logger, IEventBus bus, IConfiguration configuration)
         {
+
             Log = logger;
             eventBus = bus;
 
             DiscordConfiguration config = new DiscordConfiguration
             {
                 Token = configuration["DiscordBotKey"],
-                TokenType = TokenType.Bot
+                TokenType = TokenType.Bot,
+                
             };
 
-            client = new DiscordClient(config);
+            Client = new DiscordClient(config);
 
-            client.MessageCreated += async (s) =>
+            Client.MessageCreated += async (c,s) =>
             {
                 if(!s.Author.IsBot)
                 eventBus.PostEvent(s);
@@ -50,12 +54,12 @@ namespace Aper_bot
         public Task StartAsync(CancellationToken cancellationToken)
         {
             
-            return client.ConnectAsync();
+            return Client.ConnectAsync();
         }
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
-            return client.DisconnectAsync();
+            return Client.DisconnectAsync();
         }
     }
 }

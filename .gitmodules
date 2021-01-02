@@ -1,0 +1,3 @@
+[submodule "Brigadier.NET"]
+	path = Brigadier.NET
+	url = https://github.com/AtomicBlom/Brigadier.NET.git

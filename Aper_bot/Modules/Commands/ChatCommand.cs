@@ -1,6 +1,9 @@
-﻿namespace Aper_bot.Modules.Commands
+﻿using Brigadier.NET.Builder;
+
+namespace Aper_bot.Modules.Commands
 {
-    internal class ChatCommand
+    internal abstract class ChatCommand
     {
+        public abstract LiteralArgumentBuilder<CommandSourceStack> Register(IArgumentContext<CommandSourceStack> l);
     }
 }

@@ -1,6 +1,7 @@
 ﻿using Aper_bot.EventBus;
 
 using Brigadier.NET;
+using Brigadier.NET.Exceptions;
 
 using DSharpPlus.EventArgs;
 
@@ -26,14 +27,17 @@ namespace Aper_bot.Modules.Commands
         List<ChatCommand> Commands = new List<ChatCommand>();
 
         IEventBus eventBus;
+        Serilog.ILogger logger;
 
-        public CommandHandler(IEventBus bus, IServiceProvider provider)
+        public CommandHandler(IEventBus bus, IServiceProvider provider, Serilog.ILogger log)
         {
             eventBus = bus;
+            logger = log;
 
             
 
-            var command = ActivatorUtilities.CreateInstance<BasicCommand>(provider, new object[]{ this});
+            var command = ActivatorUtilities.CreateInstance<BasicCommand>(provider, new object[] { this });
+            dispatcher.Register(command.Register);
             Commands.Add(command);
         }
 
@@ -54,13 +58,46 @@ namespace Aper_bot.Modules.Commands
         [EventListener()]
         public void NewMessage(MessageCreateEventArgs message)
         {
-            var context = new CommandSourceStack()
+            if (message.Message.Content[0] != '/')
             {
-                @event = message
-            };
+                return;
+            }
 
-            var res = dispatcher.Parse(message.Message.Content, context);
-            dispatcher.Execute(res);
+            var context = new CommandSourceStack(message);
+
+
+
+            try
+            {
+                var res = dispatcher.Parse(message.Message.Content, context);
+
+                if (res.Exceptions.Count <= 0)
+                {
+                    dispatcher.Execute(res);
+                }
+                else
+                {
+                    string text = "";
+
+                    CommandSyntaxException exc = res.Exceptions.First().Value;
+                    text = exc.InnerException?.Message ?? exc.Message;
+
+                    message.Message.RespondAsync(text);   
+                }
+
+            }
+            catch (Exception e)
+            {
+                logger.Debug(e, "Error in parsing command");
+                if (e is CommandSyntaxException error)
+                {
+                    message.Message.RespondAsync(error.Message);
+                }
+
+            }
+
+
+
         }
     }
 }

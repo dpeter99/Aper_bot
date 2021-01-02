@@ -1,4 +1,6 @@
-﻿using Brigadier.NET;
+﻿using Aper_bot.Modules.Commands.DiscordArguments;
+
+using Brigadier.NET;
 using Brigadier.NET.Builder;
 using Brigadier.NET.Context;
 
@@ -19,20 +21,20 @@ namespace Aper_bot.Modules.Commands
         public BasicCommand(CommandHandler commandHandler, ILogger logger)
         {
             Logger = logger;
-            commandHandler.dispatcher.Register(Register);
+            //commandHandler.dispatcher.Register(Register);
         }
 
-        LiteralArgumentBuilder<CommandSourceStack> Register(IArgumentContext<CommandSourceStack> l)
+        public override LiteralArgumentBuilder<CommandSourceStack> Register(IArgumentContext<CommandSourceStack> l)
         {
-            return l.Literal("foo")
+            return l.Literal("/greet")
                         .Then(a =>
-                            a.Argument("bar", Arguments.Integer())
+                            a.Argument("user", DiscordArgumentTypes.User())
                                 .Executes(Run)
                         )
                         .Then(a=>
                             a.Literal("set")
                                 .Then(a=>a.Argument("value",Arguments.Integer())
-                            .Executes(Set)
+                                .Executes(Set)
                         ))
                         .Executes(c =>
                         {
@@ -43,7 +45,7 @@ namespace Aper_bot.Modules.Commands
 
         private int Run(CommandContext<CommandSourceStack> context)
         {
-            string messageTemplate = "Bar is " + Arguments.GetInteger(context, "bar");
+            string messageTemplate = "Hi! " + DiscordArgumentTypes.GetUser(context, "user").Username + " <a:bolbreach:780085145079119873>";
             Logger.Information(messageTemplate);
             context.Source.@event.Message.RespondAsync(messageTemplate);
             return 1;

@@ -17,46 +17,15 @@ namespace Aper_bot
 {
     static class Program
     {
-
+        
 
         static void Main(string[] args)
         {
-            Log.Logger = new LoggerConfiguration()
-                .MinimumLevel.Debug()
-                .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
-                .Enrich.FromLogContext()
-                .WriteTo.Console()
-                .CreateLogger();
+            var app = new Application(args);
 
-            using IHost host = CreateHostBuilder(args)
-                                .Build();
-
-
-            host.Run();
+            app.Run();
         }
 
-        static IHostBuilder CreateHostBuilder(string[] args)
-        {
-            return Host.CreateDefaultBuilder(args)
-                        .ConfigureServices(Services)
-                        .ConfigureLogging((c,l)=> {
-                            l.ClearProviders();
-                            l.AddSerilog();
-                        })
-                        .ConfigureHostConfiguration((config)=> {
-                            config.AddEnvironmentVariables();
-                        });
 
-                        
-        }
-
-        static void Services(HostBuilderContext ctx, IServiceCollection services)
-        {
-            services.AddSingleton(Log.Logger);
-            services.AddSingleton<IEventBus>(new EventBus.EventBus());
-            services.AddHostedService<DiscordBot>();
-
-            services.AddHostedService<CommandHandler>();
-        }
     }
 }
