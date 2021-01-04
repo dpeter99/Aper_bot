@@ -4,11 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Aper_bot
+namespace Aper_bot.Modules.Commands
 {
-    class Config
+    [AttributeUsage(AttributeTargets.Class)]
+    class CommandProviderAttribute: Attribute
     {
-        public bool CaseSensitive { get; set; }
-        public string Owner { get; set; } = "";
     }
 }

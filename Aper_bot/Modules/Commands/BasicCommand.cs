@@ -14,11 +14,11 @@ using System.Threading.Tasks;
 
 namespace Aper_bot.Modules.Commands
 {
-    class BasicCommand: ChatCommand
+    class BasicCommand: ChatCommands
     {
         ILogger Logger;
 
-        public BasicCommand(CommandHandler commandHandler, ILogger logger)
+        public BasicCommand(ILogger logger)
         {
             Logger = logger;
             //commandHandler.dispatcher.Register(Register);
@@ -30,17 +30,7 @@ namespace Aper_bot.Modules.Commands
                         .Then(a =>
                             a.Argument("user", DiscordArgumentTypes.User())
                                 .Executes(Run)
-                        )
-                        .Then(a=>
-                            a.Literal("set")
-                                .Then(a=>a.Argument("value",Arguments.Integer())
-                                .Executes(Set)
-                        ))
-                        .Executes(c =>
-                        {
-                            Console.WriteLine("Called foo with no arguments");
-                            return 1;
-                        });
+                        );
         }
 
         private int Run(CommandContext<CommandSourceStack> context)
@@ -51,12 +41,5 @@ namespace Aper_bot.Modules.Commands
             return 1;
         }
 
-        private int Set(CommandContext<CommandSourceStack> context)
-        {
-            string messageTemplate = "Foo is set to: " + Arguments.GetInteger(context, "value");
-            Logger.Information(messageTemplate);
-            context.Source.@event.Message.RespondAsync(messageTemplate);
-            return 1;
-        }
     }
 }

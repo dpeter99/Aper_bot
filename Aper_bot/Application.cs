@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Threading.Tasks;
 
+using Aper_bot.Database;
 using Aper_bot.EventBus;
 using Aper_bot.Modules;
 using Aper_bot.Modules.Commands;
 using Aper_bot.Util;
 
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -13,6 +15,8 @@ using Microsoft.Extensions.Logging;
 
 using Serilog;
 using Serilog.Events;
+
+
 namespace Aper_bot
 {
     class Application: Singleton<Application>
@@ -34,6 +38,8 @@ namespace Aper_bot
 
             host = CreateHostBuilder(args)
                                 .Build();
+
+            
             
         }
 
@@ -53,6 +59,7 @@ namespace Aper_bot
                         .ConfigureHostConfiguration((config) => {
                             config.AddEnvironmentVariables();
                         })
+                        
                         ;
 
 
@@ -67,6 +74,14 @@ namespace Aper_bot
             services.AddHostedService<CommandHandler>();
 
             services.Configure<Config>(ctx.Configuration.GetSection("Config"));
+            services.Configure<DatabaseSettings>(ctx.Configuration.GetSection("Database"));
+
+            //services.AddDbContext<DatabaseContext>();
+            //services.AddDbContextFactory<DatabaseContext>();
+
+            services.AddSingleton<IDbContextFactory<DatabaseContext>, DatabaseContextProvider>();
+            
+            
         }
     }
 }

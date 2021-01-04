@@ -4,11 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Aper_bot
+namespace Aper_bot.Database.Model
 {
-    class Config
+    public class Entity
     {
-        public bool CaseSensitive { get; set; }
-        public string Owner { get; set; } = "";
+        public int? ID { get; set; }
     }
 }

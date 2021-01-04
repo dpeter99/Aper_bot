@@ -24,6 +24,8 @@ namespace Aper_bot.Modules.Commands.DiscordArguments
 {
     class DiscordUserArgumentType : ArgumentType<DiscordUser>
     {
+        private static readonly IEnumerable<string> UserExamples = new[] { "@username", "794664673487749131", "..." };
+
         private static Regex UserRegex { get; }
 
         Config config;
@@ -110,5 +112,12 @@ namespace Aper_bot.Modules.Commands.DiscordArguments
 
             throw new SimpleCommandExceptionType(new LiteralMessage("Expected user")).CreateWithContext(reader);
         }
+
+        public override string ToString()
+        {
+                return "DiscordUser()";   
+        }
+
+        public override IEnumerable<string> Examples => UserExamples;
     }
 }

@@ -17,7 +17,6 @@ namespace Aper_bot
 {
     static class Program
     {
-        
 
         static void Main(string[] args)
         {

@@ -14,9 +14,9 @@ using System.Threading.Tasks;
 namespace Aper_bot.Modules
 {
 
-    class HelpCommand : IHostedService
+    class Logging : IHostedService
     {
-        public HelpCommand(IEventBus bus)
+        public Logging(IEventBus bus)
         {
             bus.Register(this);
         }
