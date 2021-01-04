@@ -17,6 +17,8 @@ namespace Aper_bot.Database.Model
 
         public List<GuildRule> Rules { get; set; } = new List<GuildRule>();
 
+        public List<Quote> Quotes { get; set; } = new List<Quote>();
+
         public Guild(string name, string GuildID)
         {
             Name = name;

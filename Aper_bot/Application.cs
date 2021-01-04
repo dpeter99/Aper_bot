@@ -51,6 +51,7 @@ namespace Aper_bot
         static IHostBuilder CreateHostBuilder(string[] args)
         {
             return Host.CreateDefaultBuilder(args)
+                        .ConfigureAppConfiguration(Settings)
                         .ConfigureServices(Services)
                         .ConfigureLogging((c, l) => {
                             l.ClearProviders();
@@ -63,6 +64,14 @@ namespace Aper_bot
                         ;
 
 
+        }
+
+        private static void Settings(HostBuilderContext env, IConfigurationBuilder arg2)
+        {
+            if(env.HostingEnvironment.IsDevelopment() || env.HostingEnvironment.EnvironmentName == "Design")
+            {
+                arg2.AddUserSecrets<Application>();
+            }
         }
 
         static void Services(HostBuilderContext ctx, IServiceCollection services)
