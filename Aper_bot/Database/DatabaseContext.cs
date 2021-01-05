@@ -1,5 +1,7 @@
 ﻿using Aper_bot.Database.Model;
 
+using DSharpPlus.Entities;
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.Options;
@@ -21,6 +23,8 @@ namespace Aper_bot.Database
 
         public DbSet<Guild> Guilds => Set<Guild>();
 
+        public DbSet<Quote> Quotes => Set<Quote>();
+
         IOptions<DatabaseSettings> settings;
 
         public DatabaseContext(IOptions<DatabaseSettings> options)
@@ -37,7 +41,7 @@ namespace Aper_bot.Database
 
             optionsBuilder.UseMySql(
                     connectionString,
-                    MariaDbServerVersion.LatestSupportedServerVersion,
+                    MariaDbServerVersion.FromString("10.4.12-MariaDB-1:10.4.12+maria~bionic"),
                     MysqlOptions)
                 .EnableSensitiveDataLogging()
                 .EnableDetailedErrors();
@@ -68,6 +72,25 @@ namespace Aper_bot.Database
                     */
                 });
 
+        }
+
+
+
+        public User GetOrCreateUserFor(DiscordUser discordUser)
+        {
+            var user = (from u in Users
+                        where u.UserID == discordUser.Id.ToString()
+                        select u)
+                           .FirstOrDefault();
+
+            if(user == null)
+            {
+               //user = ;
+               user = Add(new User(discordUser.Username, discordUser.Id.ToString())).Entity;
+               SaveChanges();
+            }
+
+            return user;
         }
 
     }

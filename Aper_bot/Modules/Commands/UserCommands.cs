@@ -69,7 +69,7 @@ namespace Aper_bot.Modules.Commands
                 }
                 else
                 {
-                    db.Add(new User() { Name = @event.Author.Username });
+                    db.Add(new User(@event.Author));
                     db.SaveChangesAsync().Wait();
                     @event.Message.RespondAsync($"I have never see this person. Gona remember {@event.Author.Username}.");
                 }
@@ -93,7 +93,7 @@ namespace Aper_bot.Modules.Commands
                 }
                 else
                 {
-                    db.Add(new User() { Name = @event.Author.Username });
+                    db.Add(new User(@event.Author));
                     db.SaveChangesAsync().Wait();
                     @event.Message.RespondAsync($"I have never see this person. Gona remember {@event.Author.Username}.");
                 }

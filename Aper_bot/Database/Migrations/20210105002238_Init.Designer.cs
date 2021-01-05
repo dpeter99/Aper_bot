@@ -3,14 +3,16 @@ using System;
 using Aper_bot.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Aper_bot.Database.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    partial class DatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20210105002238_Init")]
+    partial class Init
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -19,7 +21,7 @@ namespace Aper_bot.Database.Migrations
 
             modelBuilder.Entity("Aper_bot.Database.Model.Guild", b =>
                 {
-                    b.Property<int>("ID")
+                    b.Property<int?>("ID")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
@@ -38,7 +40,7 @@ namespace Aper_bot.Database.Migrations
 
             modelBuilder.Entity("Aper_bot.Database.Model.GuildRule", b =>
                 {
-                    b.Property<int>("ID")
+                    b.Property<int?>("ID")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
@@ -61,7 +63,7 @@ namespace Aper_bot.Database.Migrations
 
             modelBuilder.Entity("Aper_bot.Database.Model.Image", b =>
                 {
-                    b.Property<int>("ID")
+                    b.Property<int?>("ID")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
@@ -76,7 +78,7 @@ namespace Aper_bot.Database.Migrations
 
             modelBuilder.Entity("Aper_bot.Database.Model.Quote", b =>
                 {
-                    b.Property<int>("ID")
+                    b.Property<int?>("ID")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
@@ -89,7 +91,7 @@ namespace Aper_bot.Database.Migrations
                     b.Property<DateTime>("EventTime")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<int>("GuildID")
+                    b.Property<int?>("GuildID")
                         .HasColumnType("int");
 
                     b.Property<int?>("ImageID")
@@ -102,9 +104,6 @@ namespace Aper_bot.Database.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.Property<int>("number")
-                        .HasColumnType("int");
-
                     b.HasKey("ID");
 
                     b.HasIndex("CreatorID");
@@ -115,12 +114,12 @@ namespace Aper_bot.Database.Migrations
 
                     b.HasIndex("SourceID");
 
-                    b.ToTable("Quotes");
+                    b.ToTable("Quote");
                 });
 
             modelBuilder.Entity("Aper_bot.Database.Model.User", b =>
                 {
-                    b.Property<int>("ID")
+                    b.Property<int?>("ID")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
@@ -153,11 +152,9 @@ namespace Aper_bot.Database.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Aper_bot.Database.Model.Guild", "Guild")
+                    b.HasOne("Aper_bot.Database.Model.Guild", null)
                         .WithMany("Quotes")
-                        .HasForeignKey("GuildID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("GuildID");
 
                     b.HasOne("Aper_bot.Database.Model.Image", "Image")
                         .WithMany()
@@ -168,8 +165,6 @@ namespace Aper_bot.Database.Migrations
                         .HasForeignKey("SourceID");
 
                     b.Navigation("Creator");
-
-                    b.Navigation("Guild");
 
                     b.Navigation("Image");
 

@@ -2,8 +2,8 @@
 
 using DSharpPlus.EventArgs;
 
-using System.Threading.Tasks;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Aper_bot.Modules.Commands
 {
@@ -15,19 +15,26 @@ namespace Aper_bot.Modules.Commands
 
         public Guild? guild { get; private set; }
 
-        public CommandSourceStack(MessageCreateEventArgs @event, Microsoft.EntityFrameworkCore.IDbContextFactory<Database.DatabaseContext> dbContextFactory)
+        public User author { get; private set; }
+
+        public Database.DatabaseContext db;
+
+        public CommandSourceStack(MessageCreateEventArgs @event, Database.DatabaseContext database)
         {
+            this.db = database;
+
             this.@event = @event;
 
-            using (var db = dbContextFactory.CreateDbContext())
-            {
-                guild = (from g in db.Guilds
-                        where g.GuildID == @event.Guild.Id.ToString()
-                        select g).FirstOrDefault();
 
-                
-            }
-            
-        }
+            guild = (from g in db.Guilds
+                     where g.GuildID == @event.Guild.Id.ToString()
+                     select g).FirstOrDefault();
+
+            author = db.GetOrCreateUserFor(@event.Author);
+
+            db.SaveChangesAsync().Wait();
+        
+
     }
+}
 }

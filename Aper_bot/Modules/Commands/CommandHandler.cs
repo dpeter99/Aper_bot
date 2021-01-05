@@ -75,39 +75,43 @@ namespace Aper_bot.Modules.Commands
                 return;
             }
 
-            var context = new CommandSourceStack(message, dbContextFactory);
-
-
-            var res = dispatcher.Parse(message.Message.Content, context);
-            try
+            using (var db = dbContextFactory.CreateDbContext())
             {
-                if (res.Exceptions.Count == 0 && res.Context.Command != null)
-                {
-                    dispatcher.Execute(res);
+                var context = new CommandSourceStack(message, db);
 
-                    if(context.exectutionTask != null)
+
+                var res = dispatcher.Parse(message.Message.Content, context);
+                try
+                {
+                    if (res.Exceptions.Count == 0 && res.Context.Command != null)
                     {
-                        context.exectutionTask.Wait();
+                        dispatcher.Execute(res);
+
+                        if (context.exectutionTask != null)
+                        {
+                            context.exectutionTask.Wait();
+                        }
                     }
+                    else
+                    {
+                        CommandSyntaxException exc = res.Exceptions.FirstOrDefault().Value;
+
+                        CommandError(exc, res, message);
+                    }
+
                 }
-                else
+                catch (Exception e)
                 {
-                    CommandSyntaxException exc = res.Exceptions.FirstOrDefault().Value;
+                    logger.Error(e, $"Error in parsing command: {message.Message.Content}");
+                    if (e is CommandSyntaxException error)
+                    {
+                        CommandError(error, res, message);
+                    }
 
-                    CommandError(exc, res, message);
                 }
 
+                db.SaveChanges();
             }
-            catch (Exception e)
-            {
-                logger.Error(e, $"Error in parsing command: {message.Message.Content}");
-                if (e is CommandSyntaxException error)
-                {
-                    CommandError(error, res, message);
-                }
-
-            }
-
         }
 
 
