@@ -1,5 +1,6 @@
 ﻿using Aper_bot.Database;
 using Aper_bot.Database.Model;
+using Aper_bot.Events;
 using Aper_bot.Modules.Commands;
 
 using Brigadier.NET.Builder;
@@ -23,18 +24,18 @@ namespace Aper_bot.Modules
     [CommandProvider]
     class ServerSettingsCommand : ChatCommands
     {
-        IDbContextFactory<DatabaseContext> dbContextFactory;
+        //IDbContextFactory<DatabaseContext> dbContextFactory;
         ILogger logger;
         IOptions<Config> config;
 
-        public ServerSettingsCommand(IDbContextFactory<DatabaseContext> db, ILogger log, IOptions<Config> options)
+        public ServerSettingsCommand(ILogger log, IOptions<Config> options)
         {
-            dbContextFactory = db;
+            //dbContextFactory = db;
             logger = log;
             config = options;
         }
 
-        public override LiteralArgumentBuilder<CommandSourceStack> Register(IArgumentContext<CommandSourceStack> l)
+        public override LiteralArgumentBuilder<CommandArguments> Register(IArgumentContext<CommandArguments> l)
         {
             return l.Literal("/server")
                 .Then(
@@ -46,13 +47,13 @@ namespace Aper_bot.Modules
                 );
         }
 
-        private async Task ServerSetup(CommandContext<CommandSourceStack> context)
+        private async Task ServerSetup(CommandContext<CommandArguments> ctx, MessageCreatedEvent messageEvent)
         {
-            var message = context.Source.@event;
+            var message = messageEvent.@event;
 
             DSharpPlus.Entities.DiscordGuild discord_guild = message.Guild;
 
-            if (context.Source.guild != null)
+            if (messageEvent.guild != null)
             {
                 await message.Message.RespondAsync("Server already active");
                 return;
@@ -63,11 +64,10 @@ namespace Aper_bot.Modules
             var permissions = member.PermissionsIn(message.Message.Channel);
             if (permissions.HasPermission(Permissions.Administrator) || member.Id.ToString() == config.Value.Owner)
             {
-                using (var db = dbContextFactory.CreateDbContext())
-                {
+                
                     
 
-                    Guild? guild = (from g in db.Guilds
+                    Guild? guild = (from g in messageEvent.db.Guilds
                                 where g.GuildID == discord_guild.Id.ToString()
                                 select g).FirstOrDefault();
 
@@ -76,8 +76,8 @@ namespace Aper_bot.Modules
                         
                         logger.Information($"Registering guild: {discord_guild.Id}");
 
-                        db.Add(new Guild(discord_guild.Name, discord_guild.Id.ToString()));
-                        db.SaveChanges();
+                        messageEvent.db.Add(new Guild(discord_guild.Name, discord_guild.Id.ToString()));
+                        messageEvent.db.SaveChanges();
 
                         var embed = new DSharpPlus.Entities.DiscordEmbedBuilder()
                         {
@@ -87,7 +87,7 @@ namespace Aper_bot.Modules
                         await message.Message.RespondAsync(embed: embed.Build());
                     }
 
-                }
+                
             }
             else
             {

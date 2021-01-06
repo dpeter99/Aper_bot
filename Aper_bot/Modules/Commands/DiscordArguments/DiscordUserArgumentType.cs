@@ -43,7 +43,7 @@ namespace Aper_bot.Modules.Commands.DiscordArguments
             discord = bot;
         }
 
-        public override DiscordUser? Parse(IStringReader reader)
+        public override DiscordUser Parse(IStringReader reader)
         {
             Task<DiscordUser>? task;
 
@@ -55,7 +55,7 @@ namespace Aper_bot.Modules.Commands.DiscordArguments
             }
             catch (AggregateException e)
             {
-                throw e.InnerException;
+                throw e.InnerException ?? e;
             }
 
             return task.Result;

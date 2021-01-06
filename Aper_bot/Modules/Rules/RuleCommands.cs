@@ -1,4 +1,5 @@
 ﻿using Aper_bot.Database;
+using Aper_bot.Events;
 using Aper_bot.Modules.Commands;
 using Aper_bot.Util;
 
@@ -22,14 +23,14 @@ namespace Aper_bot.Modules.Rules
     [CommandProvider]
     class RuleCommands : ChatCommands
     {
-        IDbContextFactory<DatabaseContext> dbFactory;
+        //IDbContextFactory<DatabaseContext> dbFactory;
 
         public RuleCommands(IDbContextFactory<DatabaseContext> fac)
         {
-            dbFactory = fac;
+            //dbFactory = fac;
         }
 
-        public override LiteralArgumentBuilder<CommandSourceStack> Register(IArgumentContext<CommandSourceStack> l)
+        public override LiteralArgumentBuilder<CommandArguments> Register(IArgumentContext<CommandArguments> l)
         {
             return l.Literal("/rule")
                     .Then(
@@ -38,58 +39,56 @@ namespace Aper_bot.Modules.Rules
                             a =>
                             {
                                 return a.Argument("text", Arguments.GreedyString())
-                                        .Executes(AsyncExecue( AddRule));
-                            } 
+                                        .Executes(AsyncExecue(AddRule));
+                            }
                             )
-                        
+
                     )
                     .Then(
-                        l=>
+                        l =>
                         l.Literal("list").Executes(AsyncExecue(ListRules))
                        );
         }
 
-        async Task AddRule(CommandContext<CommandSourceStack> context)
+        async Task AddRule(CommandContext<CommandArguments> context, MessageCreatedEvent messageEvent)
         {
-            var source = context.Source;
-            var guild = context.Source.guild;
-            if (source.guild == null)
+
+            var guild = messageEvent.guild;
+            if (messageEvent.guild == null)
             {
-                GuildNotSetUp(source);
+                GuildNotSetUp(messageEvent);
 
             }
 
-            using (var db = dbFactory.CreateDbContext())
-            {
-                db.Attach(guild);
-                await db.Entry(guild).Collection(g => g!.Rules).LoadAsync();
 
-                int n = source.guild!.Rules.Count+1;
-                string text = Arguments.GetString(context, "text");
-                source.guild.Rules.Add(new Database.Model.GuildRule(n, text));
+            messageEvent.db.Attach(guild);
+            await messageEvent.db.Entry(guild).Collection(g => g!.Rules).LoadAsync();
 
-                db.Update(source.guild);
-                await db.SaveChangesAsync();
+            int n = messageEvent.guild!.Rules.Count + 1;
+            string text = Arguments.GetString(context, "text");
+            messageEvent.guild.Rules.Add(new Database.Model.GuildRule(n, text));
 
-                await source.@event.Message.RespondAsync("Added");
-            }
+            messageEvent.db.Update(messageEvent.guild);
+            await messageEvent.db.SaveChangesAsync();
+
+            await messageEvent.@event.Message.RespondAsync("Added");
+
         }
 
 
 
-        async Task ListRules(CommandContext<CommandSourceStack> context)
+        async Task ListRules(CommandContext<CommandArguments> context, MessageCreatedEvent messageEvent)
         {
-            var guild = context.Source.guild;
+            var guild = messageEvent.guild;
             if (guild == null)
             {
-                GuildNotSetUp(context.Source);
+                GuildNotSetUp(messageEvent);
             }
 
-            using (var db = dbFactory.CreateDbContext())
-            {
-                db.Attach(guild);
-                await db.Entry(guild).Collection(g => g!.Rules).LoadAsync();
-            }
+
+            messageEvent.db.Attach(guild);
+            await messageEvent.db.Entry(guild).Collection(g => g!.Rules).LoadAsync();
+
 
 
 
@@ -105,10 +104,10 @@ namespace Aper_bot.Modules.Rules
                 Description = text
             };
 
-            await context.Source.@event.Message.RespondAsync(embed: embed.Build());
+            await messageEvent.@event.Message.RespondAsync(embed: embed.Build());
         }
 
-        private static void GuildNotSetUp(CommandSourceStack source)
+        private static void GuildNotSetUp(MessageCreatedEvent source)
         {
             source.@event.Message.RespondAsync("The server is not set up");
         }

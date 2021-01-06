@@ -1,15 +1,18 @@
 ﻿using Aper_bot.Database.Model;
+using Aper_bot.EventBus;
 
 using DSharpPlus.EventArgs;
 
+using System;
 using System.Linq;
 using System.Threading.Tasks;
-
+/*
 namespace Aper_bot.Modules.Commands
 {
-    internal class CommandSourceStack
+    internal class CommandSourceStack_OLD : Event
     {
-        public MessageCreateEventArgs @event;
+        //public MessageCreateEventArgs @event;
+        public EventArgs @event;
 
         public Task? exectutionTask;
 
@@ -19,7 +22,7 @@ namespace Aper_bot.Modules.Commands
 
         public Database.DatabaseContext db;
 
-        public CommandSourceStack(MessageCreateEventArgs @event, Database.DatabaseContext database)
+        public CommandSourceStack_OLD(EventArgs @event, Database.DatabaseContext database)
         {
             this.db = database;
 
@@ -38,3 +41,4 @@ namespace Aper_bot.Modules.Commands
     }
 }
 }
+*/

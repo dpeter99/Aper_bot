@@ -1,9 +1,13 @@
-﻿using Aper_bot.EventBus;
+﻿using Aper_bot.Database;
+using Aper_bot.EventBus;
+using Aper_bot.Events;
 using Aper_bot.Util;
 
 using DSharpPlus;
 using DSharpPlus.Entities;
+using DSharpPlus.EventArgs;
 
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 
@@ -27,11 +31,14 @@ namespace Aper_bot
         ILogger Log;
         IEventBus eventBus;
 
-        public DiscordBot(ILogger logger, IEventBus bus, IConfiguration configuration)
+        IDbContextFactory<DatabaseContext> dbContextFactory;
+
+        public DiscordBot(ILogger logger, IEventBus bus, IConfiguration configuration, IDbContextFactory<DatabaseContext> fac)
         {
 
             Log = logger;
             eventBus = bus;
+            dbContextFactory = fac;
 
             DiscordConfiguration config = new DiscordConfiguration
             {
@@ -42,11 +49,7 @@ namespace Aper_bot
 
             Client = new DiscordClient(config);
 
-            Client.MessageCreated += async (c,s) =>
-            {
-                if(!s.Author.IsBot)
-                eventBus.PostEvent(s);
-            };
+            Client.MessageCreated += NewMessage;
 
             Log.Information("DiscordClientConfigured");
         }
@@ -60,6 +63,15 @@ namespace Aper_bot
         public Task StopAsync(CancellationToken cancellationToken)
         {
             return Client.DisconnectAsync();
+        }
+
+        Task NewMessage(DiscordClient discordClient,MessageCreateEventArgs messageCreateArgs)
+        {
+            var new_event = new MessageCreatedEvent(messageCreateArgs,dbContextFactory.CreateDbContext());
+
+            _ = eventBus.PostEventAsync(new_event);
+
+            return Task.CompletedTask;
         }
     }
 }

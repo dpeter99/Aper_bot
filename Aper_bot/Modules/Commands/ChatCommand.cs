@@ -1,4 +1,6 @@
-﻿using Brigadier.NET;
+﻿using Aper_bot.Events;
+
+using Brigadier.NET;
 using Brigadier.NET.Builder;
 using Brigadier.NET.Context;
 
@@ -8,17 +10,17 @@ namespace Aper_bot.Modules.Commands
 {
     internal abstract class ChatCommands
     {
-        public abstract LiteralArgumentBuilder<CommandSourceStack> Register(IArgumentContext<CommandSourceStack> l);
+        public abstract LiteralArgumentBuilder<CommandArguments> Register(IArgumentContext<CommandArguments> l);
 
-        protected Command<CommandSourceStack> AsyncExecue(AsyncCommand command)
+        protected Command<CommandArguments> AsyncExecue(AsyncCommand command)
         {
             return (ctx) =>
             {
-                ctx.Source.exectutionTask = command(ctx);
+                ctx.Source.exectutionTask = command(ctx, ctx.Source.Event);
                 return 0;
             };
         }
 
-        protected delegate Task AsyncCommand(CommandContext<CommandSourceStack> ctx);
+        protected delegate Task AsyncCommand(CommandContext<CommandArguments> ctx, MessageCreatedEvent messageEvent);
     }
 }

@@ -93,5 +93,15 @@ namespace Aper_bot.Database
             return user;
         }
 
+        public Guild? GetGuildFor(DiscordGuild discordGuild)
+        {
+            var user = (from u in Guilds
+                        where u.GuildID == discordGuild.Id.ToString()
+                        select u)
+                           .FirstOrDefault();
+
+            return user;
+        }
+
     }
 }

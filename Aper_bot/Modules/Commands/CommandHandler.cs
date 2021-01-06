@@ -1,5 +1,6 @@
 ﻿using Aper_bot.Database;
 using Aper_bot.EventBus;
+using Aper_bot.Events;
 
 using Brigadier.NET;
 using Brigadier.NET.Exceptions;
@@ -26,7 +27,7 @@ namespace Aper_bot.Modules.Commands
     /// </summary>
     class CommandHandler : IHostedService
     {
-        internal CommandDispatcher<CommandSourceStack> dispatcher = new CommandDispatcher<CommandSourceStack>();
+        internal CommandDispatcher<CommandArguments> dispatcher = new CommandDispatcher<CommandArguments>();
 
         List<ChatCommands> Commands = new List<ChatCommands>();
 
@@ -68,19 +69,19 @@ namespace Aper_bot.Modules.Commands
 
 
         [EventListener]
-        public void NewMessage(MessageCreateEventArgs message)
+        public void NewMessage(MessageCreatedEvent message)
         {
-            if (message.Message.Content.Length == 0 || message.Message.Content[0] != '/')
+            if (message.Message.Length == 0 || message.Message[0] != '/')
             {
                 return;
             }
 
             using (var db = dbContextFactory.CreateDbContext())
             {
-                var context = new CommandSourceStack(message, db);
+                var context = new CommandArguments(message);
 
 
-                var res = dispatcher.Parse(message.Message.Content, context);
+                var res = dispatcher.Parse(message.Message, context);
                 try
                 {
                     if (res.Exceptions.Count == 0 && res.Context.Command != null)
@@ -102,7 +103,7 @@ namespace Aper_bot.Modules.Commands
                 }
                 catch (Exception e)
                 {
-                    logger.Error(e, $"Error in parsing command: {message.Message.Content}");
+                    logger.Error(e, $"Error in parsing command: {message.Message}");
                     if (e is CommandSyntaxException error)
                     {
                         CommandError(error, res, message);
@@ -115,7 +116,7 @@ namespace Aper_bot.Modules.Commands
         }
 
 
-        private void CommandError(CommandSyntaxException exc, ParseResults<CommandSourceStack>? parse, MessageCreateEventArgs message)
+        private void CommandError(CommandSyntaxException exc, ParseResults<CommandArguments>? parse, MessageCreatedEvent message)
         {
             string text = exc?.InnerException?.Message ?? exc?.Message ?? "";
 
@@ -157,8 +158,20 @@ namespace Aper_bot.Modules.Commands
                 Description = text
             };
 
-            message.Message.RespondAsync(embed: builder.Build());
+            message.@event.Message.RespondAsync(embed: builder.Build());
         }
 
+    }
+
+    public class CommandArguments
+    {
+        public MessageCreatedEvent Event;
+
+        public Task? exectutionTask;
+
+        public CommandArguments(MessageCreatedEvent @event)
+        {
+            Event = @event;
+        }
     }
 }

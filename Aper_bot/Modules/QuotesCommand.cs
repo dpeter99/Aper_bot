@@ -1,5 +1,6 @@
 ﻿using Aper_bot.Database;
 using Aper_bot.Database.Model;
+using Aper_bot.Events;
 using Aper_bot.Modules.Commands;
 using Aper_bot.Modules.Commands.DiscordArguments;
 
@@ -42,7 +43,7 @@ namespace Aper_bot.Modules
             logger = log;
         }
 
-        public override LiteralArgumentBuilder<CommandSourceStack> Register(IArgumentContext<CommandSourceStack> l)
+        public override LiteralArgumentBuilder<CommandArguments> Register(IArgumentContext<CommandArguments> l)
         {
             return l.Literal("/quote")
                 .Then(q =>
@@ -76,13 +77,13 @@ namespace Aper_bot.Modules
                 ;
         }
 
-        private async Task PrintQuote(CommandContext<CommandSourceStack> ctx)
+        private async Task PrintQuote(CommandContext<CommandArguments> ctx, MessageCreatedEvent messageEvent)
         {
-            var db = ctx.Source.db;
+            var db = messageEvent.db;
 
             var num = Arguments.GetInteger(ctx, "number");
 
-            var guild = ctx.Source.guild;
+            var guild = messageEvent.guild;
             if (guild != null)
             {
                 var quote = (from q in db.Quotes
@@ -95,18 +96,18 @@ namespace Aper_bot.Modules
                         Description = quote.Text
                     };
 
-                    await ctx.Source.@event.Message.RespondAsync(embed: embed.Build());
+                    await messageEvent.@event.Message.RespondAsync(embed: embed.Build());
                     return;
                 }
 
             }
         }
 
-        private async Task ListQuotes(CommandContext<CommandSourceStack> ctx)
+        private async Task ListQuotes(CommandContext<CommandArguments> ctx, MessageCreatedEvent messageEvent)
         {
-            var db = ctx.Source.db;
+            var db = messageEvent.db;
 
-            var guild = ctx.Source.guild;
+            var guild = messageEvent.guild;
             if (guild != null)
             {
                 await db.Entry(guild).Collection(g => g!.Quotes).LoadAsync();
@@ -121,24 +122,24 @@ namespace Aper_bot.Modules
                     Description = text
                 };
 
-                await ctx.Source.@event.Message.RespondAsync(embed: embed.Build());
+                await messageEvent.@event.Message.RespondAsync(embed: embed.Build());
             }
 
 
         }
 
-        private async Task AddQuote(CommandContext<CommandSourceStack> ctx)
+        private async Task AddQuote(CommandContext<CommandArguments> ctx, MessageCreatedEvent messageEvent)
         {
-            var db = ctx.Source.db;
-            if (ctx.Source.guild == null)
+            var db = messageEvent.db;
+            if (messageEvent.guild == null)
             {
                 return;
             }
 
-            User creator = ctx.Source.author;
+            User creator = messageEvent.author;
             User? source = null;
 
-            DateTime date = ctx.Source.@event.Message.Timestamp.DateTime;
+            DateTime date = messageEvent.@event.Message.Timestamp.DateTime;
 
             string text = Arguments.GetString(ctx, "text");
 
@@ -150,10 +151,9 @@ namespace Aper_bot.Modules
                 //db.SaveChanges();
             }
 
-            db.Add(new Quote(creator.ID, source?.ID, ctx.Source.guild.ID, date, DateTime.MinValue, text, null));
+            db.Add(new Quote(creator.ID, source?.ID, messageEvent.guild.ID, date, DateTime.MinValue, text, null));
 
-            db.SaveChanges();
-
+            await db.SaveChangesAsync();
 
         }
     }

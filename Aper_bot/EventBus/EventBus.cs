@@ -28,11 +28,20 @@ namespace Aper_bot.EventBus
             listeners.RemoveAll(l => l.Listener == listener);
         }
 
-        public void PostEvent(object e)
+        public void PostEvent(Event e)
         {
             listeners.ForEach(l => l.PostEvent(e));
+
+            e.Dispose();
         }
 
+        public async Task PostEventAsync(Event e)
+        {
+            await Task.Run(() =>
+              {
+                  PostEvent(e);
+              });
+        }
 
 
         private class EventListenerWrapper

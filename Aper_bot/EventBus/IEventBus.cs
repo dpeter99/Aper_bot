@@ -12,6 +12,14 @@ namespace Aper_bot.EventBus
 
         public void Unregister(object listener);
 
-        public void PostEvent(object e);
+        public void PostEvent(Event e);
+
+        /// <summary>
+        /// This executes the event listeners on a different thread.
+        /// Probably shoudn't be awaited.
+        /// </summary>
+        /// <param name="e"></param>
+        /// <returns></returns>
+        public Task PostEventAsync(Event e);
     }
 }
