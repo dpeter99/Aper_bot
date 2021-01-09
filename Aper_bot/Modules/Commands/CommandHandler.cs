@@ -3,6 +3,7 @@ using Aper_bot.EventBus;
 using Aper_bot.Events;
 
 using Brigadier.NET;
+using Brigadier.NET.Context;
 using Brigadier.NET.Exceptions;
 
 using DSharpPlus.Entities;
@@ -19,6 +20,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore.Query.SqlExpressions;
 
 namespace Aper_bot.Modules.Commands
 {
@@ -32,6 +34,7 @@ namespace Aper_bot.Modules.Commands
         List<ChatCommands> Commands = new List<ChatCommands>();
 
         IEventBus eventBus;
+        private readonly IServiceProvider _provider;
         Serilog.ILogger logger;
 
         IDbContextFactory<DatabaseContext> dbContextFactory;
@@ -39,6 +42,7 @@ namespace Aper_bot.Modules.Commands
         public CommandHandler(IEventBus bus, IServiceProvider provider, Serilog.ILogger log, IDbContextFactory<DatabaseContext> fac)
         {
             eventBus = bus;
+            _provider = provider;
             logger = log;
             dbContextFactory = fac;
 
@@ -88,10 +92,7 @@ namespace Aper_bot.Modules.Commands
                     {
                         dispatcher.Execute(res);
 
-                        if (context.exectutionTask != null)
-                        {
-                            context.exectutionTask.Wait();
-                        }
+                        ExecuteCommand(context);
                     }
                     else
                     {
@@ -115,6 +116,33 @@ namespace Aper_bot.Modules.Commands
             }
         }
 
+        private async void ExecuteCommand(CommandArguments context)
+        {
+            //We didn't find a ation to run 
+            if (context.exectutionTask == null || context.ctx == null) return;
+            
+            var db = context.Event.db;
+
+            var method = context.exectutionTask.Method;
+            var permission =
+                from a in method.CustomAttributes
+                where a.AttributeType == typeof(ICommandConditionProvider)
+                select a;
+
+            bool check = true;
+            foreach (var attribute in permission.Cast<ICommandConditionProvider>())
+            {
+                var con = ActivatorUtilities.CreateInstance(_provider, attribute.GetCondition(context)) as CommandCondition;
+                
+                check = check && await con!.CheckCondition(context, attribute);
+            }
+
+            if (check)
+            {
+                await context.exectutionTask.Invoke(context.ctx,context.Event);    
+            }
+            
+        }
 
         private void CommandError(CommandSyntaxException exc, ParseResults<CommandArguments>? parse, MessageCreatedEvent message)
         {
@@ -161,17 +189,5 @@ namespace Aper_bot.Modules.Commands
             message.@event.Message.RespondAsync(embed: builder.Build());
         }
 
-    }
-
-    public class CommandArguments
-    {
-        public MessageCreatedEvent Event;
-
-        public Task? exectutionTask;
-
-        public CommandArguments(MessageCreatedEvent @event)
-        {
-            Event = @event;
-        }
     }
 }

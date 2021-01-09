@@ -32,7 +32,7 @@ namespace Aper_bot.EventBus
         {
             listeners.ForEach(l => l.PostEvent(e));
 
-            e.Dispose();
+            //e.Dispose();
         }
 
         public async Task PostEventAsync(Event e)

@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using DSharpPlus.Entities;
 
 namespace Aper_bot.Events
 {
@@ -29,6 +30,37 @@ namespace Aper_bot.Events
             Message = args.Message.Content;
         }
 
+        public async void RespondError(string text)
+        {
+            var builder = new DiscordEmbedBuilder();
 
+            builder.Author = new DiscordEmbedBuilder.EmbedAuthor()
+            {
+                Name = "Aper_bot"
+            };
+            builder.Color = new Optional<DiscordColor>(new DiscordColor(255, 0, 0));
+            builder.Timestamp = DateTimeOffset.Now;
+            builder.Title = "Error";
+            builder.Description = text;
+
+            await @event.Message.RespondAsync(embed: builder.Build());
+        }
+
+        public async void Respond(string text)
+        {
+            var builder = new DiscordEmbedBuilder();
+
+            builder.Author = new DiscordEmbedBuilder.EmbedAuthor()
+            {
+                Name = "Aper_bot"
+            };
+            builder.Color = new Optional<DiscordColor>(new DiscordColor(255, 0, 0));
+            builder.Timestamp = DateTimeOffset.Now;
+            
+            builder.Description = text;
+
+            await @event.Message.RespondAsync(embed: builder.Build());
+        }
+        
     }
 }

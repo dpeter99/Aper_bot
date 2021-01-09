@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Aper_bot.Modules.Commands;
+
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -15,6 +17,8 @@ namespace Aper_bot.Database.Model
         [Required]
         public string GuildID { get; set; }
 
+        public List<GuildPermissionLevel> PermissionLevels { get; set; } = new List<GuildPermissionLevel>();
+
         public List<GuildRule> Rules { get; set; } = new List<GuildRule>();
 
         public List<Quote> Quotes { get; set; } = new List<Quote>();
@@ -24,6 +28,7 @@ namespace Aper_bot.Database.Model
             Name = name;
             this.GuildID = GuildID;
         }
+        
     }
 
 }

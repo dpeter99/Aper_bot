@@ -19,9 +19,16 @@ namespace Aper_bot.Modules.Commands.DiscordArguments
     {
         internal static DiscordUserArgumentType User()
         {
-            //var bot = Program.host.Services.GetService<DiscordBot>();
-
             var i = ActivatorUtilities.CreateInstance<DiscordUserArgumentType>(Application.Instance.host.Services,new object[] { DiscordBot.Instance });
+
+            return i;
+        }
+        
+        
+        
+        internal static DiscordRoleArgumentType Role()
+        {
+            var i = ActivatorUtilities.CreateInstance<DiscordRoleArgumentType>(Application.Instance.host.Services,new object[] { DiscordBot.Instance });
 
             return i;
         }
