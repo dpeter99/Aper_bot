@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -14,11 +14,16 @@
 
   <ItemGroup>
     <None Include="..\.editorconfig" Link=".editorconfig" />
+    <None Remove="FluffySpoonAspNetLetsEncryptCertificate_Account" />
+    <None Remove="FluffySpoonAspNetLetsEncryptCertificate_Site" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="DSharpPlus" Version="4.0.0-nightly-00771" />
-    <PackageReference Include="DSharpPlus.CommandsNext" Version="4.0.0-nightly-00771" />
+    <PackageReference Include="DSharpPlus" Version="4.0.0-nightly-00773" />
+    <PackageReference Include="DSharpPlus.CommandsNext" Version="4.0.0-nightly-00773" />
+    <PackageReference Include="Extensions.Hosting.AsyncInitialization" Version="1.0.0" />
+    <PackageReference Include="FluffySpoon.AspNet.LetsEncrypt" Version="1.163.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.2.2" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="5.0.1">
       <PrivateAssets>all</PrivateAssets>
@@ -31,10 +36,13 @@
     <PackageReference Include="Serilog" Version="2.10.0" />
     <PackageReference Include="Serilog.Extensions.Logging" Version="3.0.1" />
     <PackageReference Include="Serilog.Sinks.Console" Version="3.1.1" />
+    <PackageReference Include="Sodium.Core" Version="1.2.3" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="5.6.3" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Brigadier.NET\Brigadier.NET\Brigadier.NET.csproj" />
+    <ProjectReference Include="..\DSharpPlus.SlashCommands\DSharpPlus.SlashCommands\DSharpPlus.SlashCommands.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -44,6 +52,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Command\Commands" />
     <Folder Include="Database\Migrations\" />
   </ItemGroup>
 

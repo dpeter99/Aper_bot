@@ -1,6 +1,4 @@
 ﻿using Aper_bot.Database.Model;
-using Aper_bot.Modules.Commands;
-
 using DSharpPlus.EventArgs;
 
 using System;
@@ -58,8 +56,14 @@ namespace Aper_bot.Events
             builder.Timestamp = DateTimeOffset.Now;
             
             builder.Description = text;
+            
 
             await @event.Message.RespondAsync(embed: builder.Build());
+        }
+        
+        public async Task<DiscordMessage> Respond(DiscordEmbed text)
+        {
+            return await @event.Message.RespondAsync(embed: text);
         }
         
     }

@@ -1,3 +1,6 @@
 [submodule "Brigadier.NET"]
 	path = Brigadier.NET
 	url = https://github.com/dpeter99/Brigadier.NET.git
+[submodule "DSharpPlus.SlashCommands"]
+	path = DSharpPlus.SlashCommands
+	url = https://github.com/dpeter99/DSharpPlus.SlashCommands

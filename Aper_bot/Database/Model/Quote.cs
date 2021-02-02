@@ -37,8 +37,8 @@ namespace Aper_bot.Database.Model
         public User? Source
         {
             set => _source = value;
-            get => _source
-                   ?? throw new InvalidOperationException("Uninitialized property: " + nameof(Source));
+            get => _source;
+
         }
 
         public int GuildID { get; set; }
@@ -76,7 +76,7 @@ namespace Aper_bot.Database.Model
             Text = text;
         }
 
-        public Quote(int CreatorID, int? SourceID, int guildID, DateTime creation, DateTime eventTime, string text, Image? Image)
+        public Quote(int CreatorID, int? SourceID, int guildID, DateTime creation, DateTime eventTime, string text, Image? Image, int number)
         {
             this.CreatorID = CreatorID;
             this.SourceID = SourceID;
@@ -85,6 +85,17 @@ namespace Aper_bot.Database.Model
             EventTime = eventTime;
             Text = text;
             this.Image = Image;
+            this.number = number;
+        }
+
+
+        [NotMapped]
+        public string SourceName
+        {
+            get
+            {
+                return _source?.Name ?? "Anonimus";
+            }
         }
     }
 }

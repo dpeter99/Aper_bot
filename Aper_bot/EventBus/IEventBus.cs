@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Aper_bot.EventBus
 {
-    interface IEventBus
+    public interface IEventBus
     {
         public void Register(object listener);
 

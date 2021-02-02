@@ -63,14 +63,9 @@ namespace Aper_bot.Database
                 {
                     entity.Property(e => e.Name)
                         .HasMaxLength(255);
-
-                    /*
-                    entity.HasData(new User[]
-                    {
-                        new User{Name="Test"}
-                    });
-                    */
                 });
+
+            modelBuilder.ApplyConfigurationsFromAssembly(typeof(DatabaseContext).Assembly);
 
         }
 

@@ -2,9 +2,7 @@
 using System.Threading.Tasks;
 
 using Aper_bot.EventBus;
-using Aper_bot.Modules;
-using Aper_bot.Modules.Commands;
-
+using Aper_bot.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -20,8 +18,10 @@ namespace Aper_bot
 
         static void Main(string[] args)
         {
-            var app = new Application(args);
 
+            
+            IApplicationHost app = new APCHost(args);
+            app.Init();
             app.Run();
         }
 
