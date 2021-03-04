@@ -1,7 +1,7 @@
 ﻿using Aper_bot.Modules.Discord;
 using DSharpPlus.Entities;
 
-namespace Aper_bot.Util
+namespace Aper_bot.Util.Discord
 {
     public static class EmojiHelper
     {

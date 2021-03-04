@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Aper_bot.Database
 {
-    class DatabaseContextProvider: IDbContextFactory<DatabaseContext>
+    class DatabaseContextProvider: IDbContextFactory<CoreDatabaseContext>
     {
         private IServiceProvider _serviceProvider;
 
@@ -32,9 +32,9 @@ namespace Aper_bot.Database
             
         }
 
-        public DatabaseContext CreateDbContext()
+        public CoreDatabaseContext CreateDbContext()
         {
-            return ActivatorUtilities.CreateInstance<DatabaseContext>(_serviceProvider);
+            return ActivatorUtilities.CreateInstance<CoreDatabaseContext>(_serviceProvider);
         }
     }
 }

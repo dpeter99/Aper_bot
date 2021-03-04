@@ -9,6 +9,7 @@ using Aper_bot.Modules.CommandProcessing;
 
 namespace Aper_bot.Database.Model
 {
+    [Table("GuildPermissionLevels", Schema = CoreDatabaseContext.Schema)]
     public class GuildPermissionLevel : Entity
     {
         

@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 
 namespace Aper_bot.Database.Model
 {
+    [Table("Quotes", Schema = CoreDatabaseContext.Schema)]
     public class Quote : Entity
     {
 

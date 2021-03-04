@@ -6,6 +6,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Aper_bot.Database.Model
 {
+    [Table("Users", Schema = CoreDatabaseContext.Schema)]
     public class User : Entity
     {
         /// <summary>

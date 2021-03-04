@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Aper_bot.Events;
 using Microsoft.Extensions.Options;
 
 namespace Aper_bot.Modules.CommandProcessing.Attributes
@@ -20,7 +21,7 @@ namespace Aper_bot.Modules.CommandProcessing.Attributes
             this._permission = permission;
         }
 
-        public Type GetCondition(CommandArguments context)
+        public Type GetCondition(CommandExecutionContext context)
         {
             return typeof(Condition);
         }
@@ -35,30 +36,30 @@ namespace Aper_bot.Modules.CommandProcessing.Attributes
                 _conf = conf;
             }
             
-            public override async Task<bool> CheckCondition(CommandArguments context, ICommandConditionProvider p)
+            public override async Task<bool> CheckCondition(CommandExecutionContext context, ICommandConditionProvider p)
             {
                 var atribute = (CommandPermissionRequired)p;
                 
-                var db = context.Event.db;
+                var db = context.db;
             
-                if(context.Event.guild != null)
+                if(context.Event.Guild != null)
                 {
-                    db.Entry(context.Event.guild)
+                    db.Entry(context.Event.Guild)
                         .Collection(g => g.PermissionLevels).LoadAsync().Wait();
 
-                    var member = await context.Event.@event.Guild.GetMemberAsync(ulong.Parse(context.Event.author.UserID));
+                    var member = await ((DiscordMessageCreatedEvent)context.Event).@event.Guild.GetMemberAsync(ulong.Parse(context.Event.Author.UserID));
 
                     PermissionLevels memberLevel = PermissionLevels.None;
 
                     if (member.Id.ToString() == _conf.Value.Owner ||
-                        member.Id.ToString() == context.Event.@event.Guild.OwnerId.ToString())
+                        member.Id.ToString() == ((DiscordMessageCreatedEvent)context.Event).@event.Guild.OwnerId.ToString())
                     {
                         memberLevel = PermissionLevels.Owner;
                     }
                     
                     
                 
-                    foreach (var guildLevel in context.Event.guild.PermissionLevels)
+                    foreach (var guildLevel in context.Event.Guild.PermissionLevels)
                     {
                         if (member.Roles.Any(r => r.Id.ToString() == guildLevel.RoleID))
                         {

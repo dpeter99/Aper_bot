@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Aper_bot.Events;
 
 namespace Aper_bot.Modules.CommandProcessing.Attributes
 {
@@ -19,7 +20,7 @@ namespace Aper_bot.Modules.CommandProcessing.Attributes
             _setup = setup;
         }
         
-        public Type GetCondition(CommandArguments context)
+        public Type GetCondition(CommandExecutionContext context)
         {
             return typeof(Condition);
         }
@@ -27,25 +28,25 @@ namespace Aper_bot.Modules.CommandProcessing.Attributes
 
         public class Condition : CommandCondition
         {
-            public override async Task<bool> CheckCondition(CommandArguments context, ICommandConditionProvider p)
+            public override async Task<bool> CheckCondition(CommandExecutionContext context, ICommandConditionProvider p)
             {
                 var atribute = p as GuildRequiered;
 
                 if (atribute == null)
                     throw new Exception("Bad input");
                 
-                var db = context.Event.db;
+                var db = context.db;
 
                 if (atribute.Setup)
                 {
-                    return context.Event.guild != null;
+                    return context.Event.Guild != null;
                 }
                 else
                 {
-                    return context.Event.@event.Channel.IsPrivate == false;
+                    return ((DiscordMessageCreatedEvent)context.Event).@event.Channel.IsPrivate == false;
                 }
 
-                return false;
+                
             }
         }
     }

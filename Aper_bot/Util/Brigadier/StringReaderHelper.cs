@@ -1,12 +1,6 @@
 ﻿using Brigadier.NET;
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Aper_bot.Util
+namespace Aper_bot.Util.Brigadier
 {
     public static class StringReaderHelper
     {

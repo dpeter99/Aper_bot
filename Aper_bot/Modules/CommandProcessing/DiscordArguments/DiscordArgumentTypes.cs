@@ -1,4 +1,5 @@
-﻿using Aper_bot.Modules.Discord;
+﻿using Aper_bot.Hosting;
+using Aper_bot.Modules.Discord;
 using Brigadier.NET.Context;
 using DSharpPlus.Entities;
 using Microsoft.Extensions.DependencyInjection;
@@ -9,16 +10,15 @@ namespace Aper_bot.Modules.CommandProcessing.DiscordArguments
     {
         internal static DiscordUserArgumentType User()
         {
-            var i = ActivatorUtilities.CreateInstance<DiscordUserArgumentType>(Application.Instance.host.Services,new object[] { DiscordBot.Instance });
-
+            var i = ActivatorUtilities.CreateInstance<DiscordUserArgumentType>(APCHost.Instance.Services);
+            
             return i;
         }
         
         
-        
         internal static DiscordRoleArgumentType Role()
         {
-            var i = ActivatorUtilities.CreateInstance<DiscordRoleArgumentType>(Application.Instance.host.Services,new object[] { DiscordBot.Instance });
+            var i = ActivatorUtilities.CreateInstance<DiscordRoleArgumentType>(APCHost.Instance.Services);
 
             return i;
         }

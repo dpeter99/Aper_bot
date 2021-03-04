@@ -5,11 +5,11 @@ namespace Aper_bot.Modules.CommandProcessing
 {
     internal interface ICommandConditionProvider
     {
-        Type GetCondition(CommandArguments context);
+        Type GetCondition(CommandExecutionContext context);
     }
     
     internal abstract class CommandCondition
     {
-        public abstract Task<bool> CheckCondition(CommandArguments context, ICommandConditionProvider provider);
+        public abstract Task<bool> CheckCondition(CommandExecutionContext context, ICommandConditionProvider provider);
     }
 }

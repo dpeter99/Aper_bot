@@ -5,10 +5,10 @@ using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using Aper_bot.Database;
 using Aper_bot.EventBus;
+using Aper_bot.Hosting.WebHost;
 using Aper_bot.Modules.Discord;
-using Aper_bot.Modules.Discord.SlashCommands;
 using Aper_bot.Util;
-using Aper_bot.Website;
+using Aper_bot.Util.Singleton;
 using Certes;
 using FluffySpoon.AspNet.LetsEncrypt;
 using FluffySpoon.AspNet.LetsEncrypt.Certes;
@@ -61,6 +61,7 @@ namespace Aper_bot
         {
             return Host.CreateDefaultBuilder(args)
                         .ConfigureWebHostDefaults(WebHostConfig)
+                        .ConfigureWebHost(WebHostConfig)
                         .ConfigureAppConfiguration(Settings)
                         .ConfigureServices(Services)
                         .ConfigureLogging((c, l) => {
@@ -112,7 +113,7 @@ namespace Aper_bot
             //    serviceProvider => ((CommandHandler) serviceProvider.GetService<ICommandHandler>())!);
 
             //services.AddSingleton<ISlashCommandSuplier,BrigadierSlashCommandSuplier>();
-            services.AddHostedService<SlashCommandHandler>();
+            //services.AddHostedService<SlashCommandHandler>();
             
             //services.Configure<Config>(ctx.Configuration.GetSection("Config"));
             //services.Configure<DatabaseSettings>(ctx.Configuration.GetSection("Database"));

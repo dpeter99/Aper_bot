@@ -1,15 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Aper_bot.Util;
+using Aper_bot.Util.Discord;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Aper_bot.Database.Model
 {
+    [Table("Guild", Schema = CoreDatabaseContext.Schema)]
     public class Guild: Entity
     {
         [Required]

@@ -23,9 +23,8 @@
     <PackageReference Include="DSharpPlus.CommandsNext" Version="4.0.0-nightly-00773" />
     <PackageReference Include="Extensions.Hosting.AsyncInitialization" Version="1.0.0" />
     <PackageReference Include="FluffySpoon.AspNet.LetsEncrypt" Version="1.163.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.2.2" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.1" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="5.0.1">
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.2" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="5.0.2">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
@@ -37,7 +36,7 @@
     <PackageReference Include="Serilog.Extensions.Logging" Version="3.0.1" />
     <PackageReference Include="Serilog.Sinks.Console" Version="3.1.1" />
     <PackageReference Include="Sodium.Core" Version="1.2.3" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="5.6.3" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.0.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -52,8 +51,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Command\Commands" />
     <Folder Include="Database\Migrations\" />
+    <Folder Include="Hosting\WebHost\Controllers" />
+    <Folder Include="Modules\DiscordSlash\Builders" />
+    <Folder Include="Modules\DiscordSlash\Database\Migrations" />
   </ItemGroup>
 
 </Project>

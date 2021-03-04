@@ -6,21 +6,21 @@ using Brigadier.NET.Context;
 
 namespace Aper_bot.Modules.CommandProcessing
 {
-    internal abstract class ChatCommands
+    public abstract class ChatCommands
     {
-        public abstract LiteralArgumentBuilder<CommandArguments> Register(IArgumentContext<CommandArguments> l);
+        public abstract LiteralArgumentBuilder<CommandExecutionContext> Register(IArgumentContext<CommandExecutionContext> l);
 
-        protected Command<CommandArguments> AsyncExecue(CommandArguments.Command command)
+        protected Command<CommandExecutionContext> AsyncExecue(CommandExecutionContext.Command command)
         {
             return (ctx) =>
             {
                 //ctx.Source.exectutionTask = command(ctx, ctx.Source.Event);
                 ctx.Source.ctx = ctx;
-                ctx.Source.exectutionTask = command;
+                ctx.Source.command = command;
                 return 0;
             };
         }
 
-        protected delegate Task AsyncCommand(CommandContext<CommandArguments> ctx, MessageCreatedEvent messageEvent);
+        protected delegate Task AsyncCommand(CommandContext<CommandExecutionContext> ctx, DiscordMessageCreatedEvent discordMessageEvent);
     }
 }

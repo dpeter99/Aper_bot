@@ -1,9 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Reflection;
 using Aper_bot.Database;
 using Aper_bot.EventBus;
+using Aper_bot.Hosting.Database;
+using Aper_bot.Hosting.WebHost;
+using Aper_bot.Util;
+using Aper_bot.Util.Singleton;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -15,17 +21,21 @@ using ILogger = Microsoft.Extensions.Logging.ILogger;
 
 namespace Aper_bot.Hosting
 {
-    public class APCHost : IApplicationHost
+    public class APCHost : Singleton<APCHost>, IApplicationHost
     {
         private readonly string[] _args;
-        private IHost _host;
+        private IHost? _host;
 
         private Dictionary<string, IModule> _modules = new Dictionary<string, IModule>();
 
-        private ILogger _logger;
+        private readonly ILogger _logger;
+
+        public IServiceProvider? Services => _host?.Services;
         
         public APCHost(string[] args)
         {
+            Console.WriteLine("Aper Bot is starting up");
+            
             static void UnhandledExceptionToConsole(object sender, UnhandledExceptionEventArgs e) =>
                 Console.Error.WriteLine("Unhandled Exception\n" + e.ExceptionObject.ToString());
             AppDomain.CurrentDomain.UnhandledException += UnhandledExceptionToConsole;
@@ -42,6 +52,10 @@ namespace Aper_bot.Hosting
 
             _logger = new SerilogLoggerFactory().CreateLogger("Main");
             
+            _logger.LogInformation(
+                "Aper bot version: {Version}",
+                Assembly.GetEntryAssembly()!.GetName().Version!.ToString(3));
+            
             AppDomain.CurrentDomain.UnhandledException -= UnhandledExceptionToConsole;
             AppDomain.CurrentDomain.UnhandledException += (sender, e)
                 => _logger.LogCritical((Exception)e.ExceptionObject, "Unhandled Exception");
@@ -51,26 +65,58 @@ namespace Aper_bot.Hosting
         {
             RegisterModules();
             
+            _logger.LogInformation(
+                "Found modules:\n" +
+                "{Modules}",
+                String.Join("\n",_modules.Select(m => m.Key)));
+            
             
             //Build the Host
             var builder = Host.CreateDefaultBuilder(_args);
-            //builder.ConfigureContainer<Service>();
+
+            if (_modules.Any(m => m.Value.IsAspRequiered()))
+                builder.ConfigureWebHost(WebHostConfig);
+            
             builder.ConfigureLogging((c, l) =>
             {
                 l.ClearProviders();
                 l.AddSerilog();
             });
             
-            builder.ConfigureServices( RegisterServices);
+            builder.ConfigureServices(RegisterServices);
 
             _host = builder.Build();
+        }
+
+        private void WebHostConfig(IWebHostBuilder builder)
+        {
+            builder.UseStartup<Setup>();
+            
+            builder.UseKestrel((builderContext, options) =>
+            {
+                var appServices = options.ApplicationServices;
+                
+                options.Configure(builderContext.Configuration.GetSection("Kestrel"), reloadOnChange: true);
+                
+                options.Listen(IPAddress.Any,80);
+                options.Listen(IPAddress.Any, 25580,configure: a => { a.UseHttps(); });
+                
+            });
         }
 
 
         public void Run()
         {
-            _host.InitAsync();
-            _host.Run();
+            if (_host != null)
+            {
+                
+                _host.InitAsync();
+                _host.Run();
+            }
+            else
+            {
+                _logger.LogCritical("There is no host to run. The host building might have failed");
+            }
         }
 
         private void RegisterModules()
@@ -98,19 +144,23 @@ namespace Aper_bot.Hosting
             //Register services for each module
             foreach (var module in _modules)
             {
-                module.Value.RegisterServices(services);
+                module.Value.RegisterServices(ctx,services);
             }
         }
 
         private void RegisterDefaultServices(HostBuilderContext ctx, IServiceCollection services)
         {
+            services.AddAsyncInitialization();
+            
             services.AddSingleton(Log.Logger);
             services.AddSingleton<IEventBus>(new EventBus.EventBus());
             
             services.Configure<Config>(ctx.Configuration.GetSection("Config"));
             services.Configure<DatabaseSettings>(ctx.Configuration.GetSection("Database"));
+
+            services.AddAsyncInitializer<DatabaseMigrator>();
             
-            services.AddSingleton<IDbContextFactory<DatabaseContext>, DatabaseContextProvider>();
+            services.AddSingleton<IDbContextFactory<CoreDatabaseContext>, DatabaseContextProvider>();
 
             services.AddHttpClient();
         }

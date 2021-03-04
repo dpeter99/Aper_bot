@@ -82,7 +82,17 @@ namespace Aper_bot.EventBus
 
             public void PostEvent(object e)
             {
-                listeners[e.GetType()].Invoke(Listener, new[] { e });
+                var t = e.GetType();
+
+                foreach (var listener in listeners)
+                {
+                    if (listener.Value.GetParameters()[0].ParameterType.IsInstanceOfType(e))
+                    {
+                        listeners[e.GetType()].Invoke(Listener, new[] { e });
+                    }
+                }
+                
+                
                 //method.Invoke(Listener, new[] { e });
             }
         }

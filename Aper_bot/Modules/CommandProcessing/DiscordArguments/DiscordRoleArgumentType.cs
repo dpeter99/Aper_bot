@@ -4,8 +4,10 @@ using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Aper_bot.Events;
 using Aper_bot.Modules.Discord;
 using Aper_bot.Util;
+using Aper_bot.Util.Brigadier;
 using Brigadier.NET;
 using Brigadier.NET.Exceptions;
 using DSharpPlus.Entities;
@@ -47,9 +49,9 @@ namespace Aper_bot.Modules.CommandProcessing.DiscordArguments
 
             string token = reader.ReadTillSpace();
 
-            if (source is CommandArguments arguments)
+            if (source is CommandExecutionContext arguments)
             {
-                var ctx = arguments.Event.@event;
+                var ctx = ((DiscordMessageCreatedEvent)arguments.Event).@event;
 
                 if (ctx.Guild == null)
                     throw new DynamicCommandExceptionType(value => new LiteralMessage($"Invalid role '{value}'")).CreateWithContext(reader, token);
@@ -88,7 +90,7 @@ namespace Aper_bot.Modules.CommandProcessing.DiscordArguments
                 return rol;
             }
             
-            throw new Exception($"This can only work with a {typeof(CommandArguments)} TSource");
+            throw new Exception($"This can only work with a {typeof(CommandExecutionContext)} TSource");
         }
 
         public override IEnumerable<string> Examples => UserExamples;

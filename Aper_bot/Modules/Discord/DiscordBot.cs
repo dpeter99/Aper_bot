@@ -1,10 +1,14 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Aper_bot.CommandExecutor;
 using Aper_bot.Database;
 using Aper_bot.EventBus;
 using Aper_bot.Events;
+using Aper_bot.Modules.CommandProcessing.Commands;
 using Aper_bot.Util;
+using Aper_bot.Util.Singleton;
+using Certes.Acme.Resource;
 using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
@@ -23,16 +27,29 @@ namespace Aper_bot.Modules.Discord
         //public DiscordSlashClient SlashClient { get; private set; }
 
         ILogger<DiscordBot> Log;
-        readonly IEventBus eventBus;
 
-        readonly IDbContextFactory<DatabaseContext> dbContextFactory;
+        private readonly ICommandTree _commandTree;
 
-        public DiscordBot(ILogger<DiscordBot> logger, IEventBus bus, IOptions<Config> configuration, IDbContextFactory<DatabaseContext> fac, ILoggerFactory loggerFactory)
+        private readonly ICommandExecutor _commandExecutor;
+        //readonly IEventBus eventBus;
+
+        readonly IDbContextFactory<CoreDatabaseContext> dbContextFactory;
+
+        public DiscordBot(ILogger<DiscordBot> logger, ICommandTree commandTree, IOptions<Config> configuration, IDbContextFactory<CoreDatabaseContext> fac, ILoggerProvider loggerProvider)
         {
 
             Log = logger;
-            eventBus = bus;
+            _commandTree = commandTree;
+            //_commandExecutor = commandExecutor;
+            //eventBus = bus;
             dbContextFactory = fac;
+
+            var loggerFactory = LoggerFactory.Create(builder =>
+            {
+                builder.AddProvider(loggerProvider);
+                builder.SetMinimumLevel(LogLevel.Critical);
+                
+            });
 
             DiscordConfiguration config = new DiscordConfiguration
             {
@@ -47,8 +64,9 @@ namespace Aper_bot.Modules.Discord
             Client.MessageCreated += NewMessage;
             Client.UnknownEvent += (sender, args) =>
             {
-                logger.LogDebug("asd");
+                //logger.LogDebug("asd");
                 args.Handled = true;
+
                 return Task.CompletedTask; 
             };
             
@@ -69,9 +87,9 @@ namespace Aper_bot.Modules.Discord
 
         Task NewMessage(DiscordClient discordClient,MessageCreateEventArgs messageCreateArgs)
         {
-            var new_event = new MessageCreatedEvent(messageCreateArgs,dbContextFactory.CreateDbContext());
+            var new_event = new DiscordMessageCreatedEvent(messageCreateArgs,dbContextFactory.CreateDbContext());
 
-            _ = eventBus.PostEventAsync(new_event);
+            _commandTree.ProcessMessage(new_event);
 
             return Task.CompletedTask;
         }
