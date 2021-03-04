@@ -18,7 +18,7 @@ namespace Aper_bot.Modules.CommandProcessing
             services.AddSingleton<ICommandTree,CommandTree>();
             //services.AddSingleton<IAsyncInitializer>(
             //    serviceProvider => ((CommandTree) serviceProvider.GetService<ICommandTree>())!);
-            services.AddSingleton<IAsyncInitializer,CommandTree>();
+            //services.AddSingleton<IAsyncInitializer,CommandTree>();
             
 
             services.AddSingleton<ISlashCommandSuplier,BrigadierSlashCommandSuplier>();

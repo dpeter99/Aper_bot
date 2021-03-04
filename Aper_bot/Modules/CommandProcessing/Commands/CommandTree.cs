@@ -18,7 +18,7 @@ namespace Aper_bot.Modules.CommandProcessing.Commands
     /// <summary>
     /// This class is going to handle the incoming commands and than forward them to the right place
     /// </summary>
-    public class CommandTree : Singleton<CommandTree>, IAsyncInitializer, ICommandTree
+    public class CommandTree : Singleton<CommandTree>, ICommandTree
     {
         public CommandDispatcher<CommandExecutionContext> dispatcher { get; private set; } = new CommandDispatcher<CommandExecutionContext>();
 
@@ -49,10 +49,10 @@ namespace Aper_bot.Modules.CommandProcessing.Commands
                 String.Join("\n",Commands.Select(m => m.GetType().Name)));
         }
 
-        public async Task InitializeAsync()
-        {
+        //public async Task InitializeAsync()
+        //{
             //eventBus.Register(this);
-        }
+        //}
 
         public void RunCommand(CommandExecutionContext ctx)
         {
