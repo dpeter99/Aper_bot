@@ -31,10 +31,10 @@ namespace Aper_bot.Modules.CommandProcessing.DiscordArguments
 
         DiscordBot discord;
 
-        public DiscordRoleArgumentType(DiscordBot bot, IOptions<Config> conf)
+        public DiscordRoleArgumentType(IOptions<Config> conf)
         {
             config = conf.Value;
-            discord = bot;
+            discord = DiscordBot.Instance;
         }
 
 

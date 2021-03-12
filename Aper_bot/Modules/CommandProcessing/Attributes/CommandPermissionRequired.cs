@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Aper_bot.Events;
+using Aper_bot.Modules.Discord;
 using Microsoft.Extensions.Options;
 
 namespace Aper_bot.Modules.CommandProcessing.Attributes
@@ -40,7 +41,7 @@ namespace Aper_bot.Modules.CommandProcessing.Attributes
             {
                 var atribute = (CommandPermissionRequired)p;
                 
-                var db = context.db;
+                var db = context.Db;
             
                 if(context.Event.Guild != null)
                 {

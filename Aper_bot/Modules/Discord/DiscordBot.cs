@@ -20,7 +20,27 @@ using ILogger = Serilog.ILogger;
 
 namespace Aper_bot.Modules.Discord
 {
-    public class DiscordBot : Singleton<DiscordBot>, IHostedService
+    public class DiscordBotStarter:IHostedService
+    {
+        private readonly DiscordBot _bot;
+
+        public DiscordBotStarter(DiscordBot bot)
+        {
+            _bot = bot;
+        }
+
+        public Task StartAsync(CancellationToken cancellationToken)
+        {
+            return _bot.Client.ConnectAsync();
+        }
+
+        public Task StopAsync(CancellationToken cancellationToken)
+        {
+            return _bot.Client.DisconnectAsync();
+        }
+    }
+    
+    public class DiscordBot : Singleton<DiscordBot>
     {
 
         public DiscordClient Client { get; private set; }
@@ -30,7 +50,7 @@ namespace Aper_bot.Modules.Discord
 
         private readonly ICommandTree _commandTree;
 
-        private readonly ICommandExecutor _commandExecutor;
+        //private readonly ICommandExecutor _commandExecutor;
         //readonly IEventBus eventBus;
 
         readonly IDbContextFactory<CoreDatabaseContext> dbContextFactory;

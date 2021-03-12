@@ -1,5 +1,6 @@
 ﻿using System.Threading.Tasks;
 using Aper_bot.Events;
+using Aper_bot.Modules.Discord;
 using Brigadier.NET;
 using Brigadier.NET.Builder;
 using Brigadier.NET.Context;

@@ -7,7 +7,7 @@ namespace Aper_bot.Modules.CommandProcessing.Commands
     {
         CommandDispatcher<CommandExecutionContext> dispatcher { get; }
 
-        void ProcessMessage(IMessageCreatedEvent message);
+        void ProcessMessage(IMessageCreatedEvent messageEvent);
 
         void RunCommand(CommandExecutionContext ctx);
     }

@@ -6,6 +6,7 @@ using Aper_bot.Events;
 using Aper_bot.Modules.CommandProcessing;
 using Aper_bot.Modules.CommandProcessing.Attributes;
 using Aper_bot.Modules.CommandProcessing.DiscordArguments;
+using Aper_bot.Modules.Discord;
 using Brigadier.NET;
 using Brigadier.NET.Builder;
 using Brigadier.NET.Context;
@@ -32,7 +33,7 @@ namespace Aper_bot.Commands
 
         public override LiteralArgumentBuilder<CommandExecutionContext> Register(IArgumentContext<CommandExecutionContext> l)
         {
-            return l.Literal("/server")
+            return l.Literal("server")
                 .Then(s =>
                     s.Literal("setup")
                             .Executes(AsyncExecue(ServerSetup))
@@ -81,7 +82,7 @@ namespace Aper_bot.Commands
 
 
 
-                    Guild? guild = (from g in ctx.Source.db.Guilds
+                    Guild? guild = (from g in ctx.Source.Db.Guilds
                         where g.GuildID == discord_guild.Id.ToString()
                         select g).FirstOrDefault();
 
@@ -90,8 +91,8 @@ namespace Aper_bot.Commands
 
                         logger.Information($"Registering guild: {discord_guild.Id}");
 
-                        ctx.Source.db.Add(new Guild(discord_guild.Name, discord_guild.Id.ToString()));
-                        ctx.Source.db.SaveChanges();
+                        ctx.Source.Db.Add(new Guild(discord_guild.Name, discord_guild.Id.ToString()));
+                        ctx.Source.Db.SaveChanges();
 
                         var embed = new DSharpPlus.Entities.DiscordEmbedBuilder()
                         {
@@ -116,14 +117,14 @@ namespace Aper_bot.Commands
         {
             if (discordMessageEvent.Guild == null)
             {
-                discordMessageEvent.RespondError("This command can only be run in a server");
+                await discordMessageEvent.RespondError("This command can only be run in a server");
             }
             
             var levelName = Arguments.GetString(ctx,"level");
             if (Enum.TryParse(levelName, out PermissionLevels level))
             {
                 
-                await ctx.Source.db.Entry(discordMessageEvent.Guild)
+                await ctx.Source.Db.Entry(discordMessageEvent.Guild)
                     .Collection(g => g!.PermissionLevels).LoadAsync();
                 
                 var role = ctx.GetArgument<DiscordRole>("role");
@@ -134,15 +135,15 @@ namespace Aper_bot.Commands
                 if (setting == null)
                 {
                     discordMessageEvent.Guild!.PermissionLevels.Add(new GuildPermissionLevel(role.Id.ToString(),level));    
-                    discordMessageEvent.Respond("Done");
+                    await discordMessageEvent.Respond("Done");
                 }
                 else
                 {
-                    discordMessageEvent.Respond("Already added");
+                    await discordMessageEvent.Respond("Already added");
                 }
                
 
-                await ctx.Source.db.SaveChangesAsync();
+                await ctx.Source.Db.SaveChangesAsync();
             }
         }
         
@@ -150,7 +151,7 @@ namespace Aper_bot.Commands
         {
             if (discordMessageEvent.Guild == null)
             {
-                discordMessageEvent.RespondError("This command can only be run in a server");
+                await discordMessageEvent.RespondError("This command can only be run in a server");
             }
             
             var levelName = Arguments.GetString(ctx,"level");
@@ -158,7 +159,7 @@ namespace Aper_bot.Commands
             if (Enum.TryParse(levelName, out PermissionLevels level))
             {
                 
-                await ctx.Source.db.Entry(discordMessageEvent.Guild)
+                await ctx.Source.Db.Entry(discordMessageEvent.Guild)
                     .Collection(g => g!.PermissionLevels).LoadAsync();
                 
                 var setting = (from p in discordMessageEvent.Guild!.PermissionLevels
@@ -168,15 +169,15 @@ namespace Aper_bot.Commands
                 if (setting != null)
                 {
                     discordMessageEvent.Guild!.PermissionLevels.Remove(setting);    
-                    discordMessageEvent.Respond("Done");
+                    await discordMessageEvent.Respond("Done");
                 }
                 else
                 {
-                    discordMessageEvent.Respond("Didn't find");
+                    await discordMessageEvent.Respond("Didn't find");
                 }
                
 
-                await ctx.Source.db.SaveChangesAsync();
+                await ctx.Source.Db.SaveChangesAsync();
             }
         }
 

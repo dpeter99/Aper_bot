@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
 using System.Runtime.Intrinsics.Arm;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Aper_bot.Database.Model;
@@ -30,14 +31,17 @@ using ApplicationCommandOption = Aper_bot.Modules.DiscordSlash.Entities.Applicat
 
 namespace Aper_bot.Modules.DiscordSlash
 {
-    public class SlashCommandHandler : IAsyncInitializer
+    public class SlashCommandHandler : IHostedService
     {
-        ILogger<SlashCommandHandler> Logger { get; }
-        IHttpClientFactory HttpClientFactory { get; }
-        DiscordBot Bot { get; }
-        ISlashCommandSuplier CommandSuplier { get; }
+        private readonly ILogger<SlashCommandHandler> _logger;
 
-        private HttpClient Client;
+        private readonly IHttpClientFactory _httpClientFactory;
+
+        private DiscordBot _bot;
+
+        private ISlashCommandSuplier _commandSuplier;
+
+        private readonly HttpClient _client;
         private readonly IDbContextFactory<SlashDbContext> _dbContextFactory;
 
         private string? token;
@@ -54,123 +58,242 @@ namespace Aper_bot.Modules.DiscordSlash
             HttpClient http,
             IDbContextFactory<SlashDbContext> dbContextFactory)
         {
-            Logger = logger;
-            HttpClientFactory = httpClientFactory;
-            Bot = bot;
+            _logger = logger;
+            _httpClientFactory = httpClientFactory;
+            _bot = bot;
 
             token = configuration.Value.DiscordBotKey;
             botID = configuration.Value.BotID;
 
-            CommandSuplier = commandSuplier;
+            _commandSuplier = commandSuplier;
 
-            Client = http;
+            _client = http;
             _dbContextFactory = dbContextFactory;
+        }
 
-            LoadCommandTree();
+        public Task StartAsync(CancellationToken cancellationToken)
+        {
+            return InitializeAsync();
+        }
+
+        public Task StopAsync(CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
         }
 
         public async Task InitializeAsync()
         {
-            var cmds = CommandSuplier.GetCommands();
+            await LoadCommandTree();
 
-            await UpdateOrAddCommands(cmds);
+            //var cmds = _commandSuplier.GetCommands();
+
+            //await UpdateOrAddCommands(cmds);
         }
 
-        private void LoadCommandTree()
+        private async Task LoadCommandTree()
         {
-            var cmds = CommandSuplier.GetCommands();
+            var suppliedCommands = _commandSuplier.GetCommands().ToList(); //Current commands
 
-            foreach (var cmd in cmds)
+            //Load in the commands from discord
+            var discordCmds = await GetCommands("611652646721421463");
+            //Load in the database
+            using (var db = _dbContextFactory.CreateDbContext())
             {
-                using (var db = _dbContextFactory.CreateDbContext())
+                foreach (var cmd in suppliedCommands)
                 {
                     var c = db.Commands.SingleOrDefault(d => d.Name == cmd._applicationCommand.Name);
-                    if (c?.CommandID != null)
-                        _commands.TryAdd(c.CommandID, cmd);
+
+                    if (c is not null)
+                    {
+                        cmd._applicationCommand.Id = ulong.Parse(c.CommandID);
+                    }
                 }
             }
+
+            //Find new/changed
+            //Find removed
+            // ... build our update and delete lists ...
+            List<SlashCommand> toUpdate = new();
+            List<SlashCommand> toRemove = new();
+            
+            foreach (var cmd in discordCmds)
+            {
+                // ... see if Commands contains the command name ...
+                var match = suppliedCommands.FirstOrDefault(c => c._applicationCommand.Id == cmd._applicationCommand.Id);
+                if (match is not null)
+                {
+                    // ... if it is there, and the version number is lower in the saved state ...
+                    if (cmd._applicationCommand != match._applicationCommand)
+                    {
+                        // ... queue the command for an update.
+                        toUpdate.Add(cmd);
+                    }
+                    else
+                    {
+                        // ... otherwise, udpate the slash command with the saved values.
+                        //slashCommand.CommandId = cmd.CommandId;
+                        //slashCommand.GuildId = cmd.GuildId;
+                        //slashCommand.ApplicationId = BotId;
+                    }
+                }
+                else
+                {
+                    // ... if its in the config but not in the code
+                    // queue the command for deletion.
+                    toRemove.Add(cmd);
+                }
+            }
+
+            //Remove / Update
+            // ... then update/add the commands ...
+            await UpdateOrAddCommands(toUpdate);
+            // ... and delete any old commands ...
+            await RemoveOldCommands(toRemove);
         }
+
+        private async Task<IEnumerable<SlashCommand>> GetCommands(string? guildId)
+        {
+            HttpRequestMessage msg = new();
+            msg.Headers.Authorization = new("Bot", token);
+            msg.Method = HttpMethod.Get;
+
+            if (guildId is not null)
+            {
+                msg.RequestUri = new Uri($"https://discord.com/api/applications/{botID}/guilds/{guildId}/commands");
+            }
+            else
+            {
+                msg.RequestUri = new Uri($"https://discord.com/api/applications/{botID}/commands");
+            }
+
+            var response = await _client.SendAsync(msg);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var jsonResult = await response.Content.ReadAsStringAsync();
+
+                var newCmds = JsonConvert.DeserializeObject<ApplicationCommand[]>(jsonResult);
+
+                foreach (var command in newCmds)
+                {
+                    _logger.LogInformation($"Discord has {command.Name}");
+                }
+
+                var newCommands = newCmds.Select(c => new SlashCommand(c, guildId));
+
+                return newCommands;
+            }
+            else
+            {
+                // ... otherwise log the error.
+                _logger.LogError(await response.Content.ReadAsStringAsync(), "Error while updating command");
+            }
+
+            return null;
+        }
+
 
         private async Task UpdateOrAddCommands(IEnumerable<SlashCommand> toUpdate)
         {
-            // For every command
-            foreach (var update in toUpdate)
+            var GuildId = "611652646721421463";
+
+            foreach (var command in toUpdate)
             {
-                await UpdateCommand(update, "611652646721421463");
+                using (var s = _logger.BeginScope(toUpdate))
+                {
+                    _logger.LogInformation("[    ] Updating command: {Comand}", command._applicationCommand.Name);
+
+                    HttpRequestMessage msg = new();
+                    msg.Headers.Authorization = new("Bot", token);
+                    msg.Method = HttpMethod.Post;
+
+                    var json = JsonConvert.SerializeObject(command._applicationCommand, Formatting.Indented, new JsonSerializerSettings
+                    {
+                        NullValueHandling = NullValueHandling.Ignore,
+                        DefaultValueHandling = DefaultValueHandling.Ignore
+                    });
+                    msg.Content = new StringContent(json);
+                    msg.Content.Headers.ContentType = new("application/json");
+
+
+                    if (GuildId is not null)
+                    {
+                        msg.RequestUri = new Uri($"https://discord.com/api/applications/{botID}/guilds/{GuildId}/commands");
+                    }
+                    else
+                    {
+                        msg.RequestUri = new Uri($"https://discord.com/api/applications/{botID}/commands");
+                    }
+
+                   
+                    var response = await _client.SendAsync(msg);
+                    
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var jsonResult = await response.Content.ReadAsStringAsync();
+
+                        var newCommand = JsonConvert.DeserializeObject<ApplicationCommand>(jsonResult);
+
+                        var slashCommand = new SlashCommand(newCommand, GuildId);
+
+                        using (var db = _dbContextFactory.CreateDbContext())
+                        {
+                            var old = db.Commands.SingleOrDefault(c => c.Name == newCommand.Name);
+                            if (old is not null)
+                            {
+                                old.CommandID = newCommand.Id.ToString();
+                            }
+                            else
+                            {
+                                old = new Command(newCommand.Name, newCommand.Id.ToString(), 1);
+                                db.Commands.Add(old);
+                            }
+
+                            await db.SaveChangesAsync();
+
+                            _commands.TryAdd(slashCommand._applicationCommand.Id, slashCommand);
+                        }
+
+                        _logger.LogInformation("[DONE] Command updated");
+                    }
+                    else
+                    {
+                        // ... otherwise log the error.
+                        _logger.LogError(await response.Content.ReadAsStringAsync(), "Error while updating command");
+                    }
+                }
             }
         }
 
-        private async Task UpdateCommand(SlashCommand update, string? GuildId)
+        private async Task RemoveOldCommands(List<SlashCommand> toRemove)
         {
-            var cmd = update;
-
-            using (var s = Logger.BeginScope(cmd))
+            foreach (var scfg in toRemove)
             {
-                Logger.LogInformation("Updating command: {Comand}", cmd._applicationCommand.Name);
-
+                _logger.LogInformation("[    ] Removing command: {Comand}", scfg._applicationCommand.Name);
+                // ... build a new HTTP request message ...
                 HttpRequestMessage msg = new();
                 msg.Headers.Authorization = new("Bot", token);
-                msg.Method = HttpMethod.Post;
-                // ... read the command object, ignoring default and null fields ...
-                var json = JsonConvert.SerializeObject(cmd._applicationCommand, Formatting.Indented, new JsonSerializerSettings
-                {
-                    NullValueHandling = NullValueHandling.Ignore,
-                    DefaultValueHandling = DefaultValueHandling.Ignore
-                });
-                // ... set the content of the request ...
-                msg.Content = new StringContent(json);
-                msg.Content.Headers.ContentType = new("application/json");
+                msg.Method = HttpMethod.Delete;
 
-
-                if (GuildId is not null)
+                if (scfg._guild is not null)
                 {
-                    msg.RequestUri = new Uri($"https://discord.com/api/applications/{botID}/guilds/{GuildId}/commands");
+                    msg.RequestUri = new Uri($"https://discord.com/api/applications/{botID}/guilds/{scfg._guild}/commands/{scfg._applicationCommand.Id}");
                 }
                 else
                 {
-                    msg.RequestUri = new Uri($"https://discord.com/api/applications/{botID}/commands");
+                    msg.RequestUri = new Uri($"https://discord.com/api/applications/{botID}/commands/{scfg._applicationCommand.Id}");
                 }
 
-                // ... then send and wait for a response ...
-                var response = await Client.SendAsync(msg);
-                // ... if the response is a success ...
+                var response = await _client.SendAsync(msg);
+
                 if (response.IsSuccessStatusCode)
                 {
-                    // ... get the new command data ...
-                    var jsonResult = await response.Content.ReadAsStringAsync();
-
-                    var newCommand = JsonConvert.DeserializeObject<ApplicationCommand>(jsonResult);
-
-
-                    using (var db = _dbContextFactory.CreateDbContext())
-                    {
-                        var old = db.Commands.SingleOrDefault(c => c.Name == newCommand.Name);
-                        if (old is not null)
-                        {
-                            old.CommandID = newCommand.Id.ToString();
-                        }
-                        else
-                        {
-                            db.Commands.Add(new Command(newCommand.Name, newCommand.Id.ToString(), 1));
-                        }
-
-                        await db.SaveChangesAsync();
-                    }
-
-                    // ... and the old command data ...
-                    //var oldCommand = Commands[update.Name];
-                    // ... then update the old command with the new command.
-                    //if (newCommand is not null && oldCommand is not null)
-                    //{
-                    //    oldCommand.ApplicationId = newCommand.ApplicationId;
-                    //    oldCommand.CommandId = newCommand.Id;
-                    //}
-                    Logger.LogInformation("Command {Comand}, updated", cmd._applicationCommand.Name);
+                    //Commands.TryRemove(scfg.Name, out _);
+                    _logger.LogInformation("[DONE] Removing command: {Comand}", scfg._applicationCommand.Name);
                 }
                 else
                 {
-                    // ... otherwise log the error.
-                    Logger.LogError(await response.Content.ReadAsStringAsync(), "Error while updating command");
+                    _logger.LogError($"Failed to delete command: ${response.ReasonPhrase}");
                 }
             }
         }
@@ -191,15 +314,26 @@ namespace Aper_bot.Modules.DiscordSlash
 
         public Command<CommandContext<CommandArguments>> run;
 
+        public Snowflake? _guild;
+
+        public SlashCommand(ApplicationCommand applicationCommand, Snowflake? guild)
+        {
+            _applicationCommand = applicationCommand;
+            this._guild = guild;
+        }
+
         public void Execute(ApplicationCommandInteractionData interactionData)
         {
             CommandArguments arguments = new();
-            
+
             if (interactionData.Options is not null &&
                 _applicationCommand.Options is not null)
             {
                 ParseOptions(interactionData.Options, _applicationCommand.Options, arguments);
             }
+            
+            
+            
         }
 
         private void ParseOptions(ApplicationCommandInteractionDataOption[] data, ApplicationCommandOption[] option, CommandArguments commandArguments)
@@ -221,15 +355,9 @@ namespace Aper_bot.Modules.DiscordSlash
                     {
                         foreach (var commandOption in data)
                         {
-                            commandOption.Value?.Let(o =>
-                            {
-                                commandArguments.args.Add(commandOption.Name, o.ToString());
-                            });
-
+                            commandOption.Value?.Let(o => { commandArguments.args.Add(commandOption.Name, o.ToString()); });
                         }
                     }
-                    
-                    
                 }
             }
 

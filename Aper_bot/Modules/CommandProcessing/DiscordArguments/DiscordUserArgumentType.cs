@@ -30,10 +30,10 @@ namespace Aper_bot.Modules.CommandProcessing.DiscordArguments
 
         DiscordBot discord;
 
-        public DiscordUserArgumentType(DiscordBot bot, IOptions<Config> conf)
+        public DiscordUserArgumentType(IOptions<Config> conf)
         {
             config = conf.Value;
-            discord = bot;
+            discord = DiscordBot.Instance;
         }
 
         public override DiscordUser Parse(IStringReader reader)

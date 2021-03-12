@@ -10,7 +10,7 @@ namespace Aper_bot.Modules.CommandProcessing.DiscordArguments
     {
         internal static DiscordUserArgumentType User()
         {
-            var i = ActivatorUtilities.CreateInstance<DiscordUserArgumentType>(APCHost.Instance.Services);
+            var i = ActivatorUtilities.CreateInstance<DiscordUserArgumentType>(APCHost.Instance.Services!);
             
             return i;
         }
@@ -18,7 +18,7 @@ namespace Aper_bot.Modules.CommandProcessing.DiscordArguments
         
         internal static DiscordRoleArgumentType Role()
         {
-            var i = ActivatorUtilities.CreateInstance<DiscordRoleArgumentType>(APCHost.Instance.Services);
+            var i = ActivatorUtilities.CreateInstance<DiscordRoleArgumentType>(APCHost.Instance.Services!);
 
             return i;
         }

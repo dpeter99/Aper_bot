@@ -15,12 +15,12 @@ namespace Aper_bot.Modules.CommandProcessing
     {
         public void RegisterServices(HostBuilderContext ctx,IServiceCollection services)
         {
-            services.AddSingleton<ICommandTree,CommandTree>();
-            //services.AddSingleton<IAsyncInitializer>(
-            //    serviceProvider => ((CommandTree) serviceProvider.GetService<ICommandTree>())!);
-            //services.AddSingleton<IAsyncInitializer,CommandTree>();
+            services.Configure<CommandBaseConfig>(ctx.Configuration.GetSection("CommandsConfig"));
             
-
+            services.AddSingleton<ICommandTree,CommandTree>();
+            services.AddSingleton<IAsyncInitializer>(
+                serviceProvider => ((CommandTree) serviceProvider.GetService<ICommandTree>())!);
+            
             services.AddSingleton<ISlashCommandSuplier,BrigadierSlashCommandSuplier>();
             
             var commands = Assembly.GetExecutingAssembly().DefinedTypes.Where(e => e.CustomAttributes.Any(a => a.AttributeType == typeof(CommandProviderAttribute)));
@@ -28,9 +28,6 @@ namespace Aper_bot.Modules.CommandProcessing
             {
                 if (item.IsSubclassOf(typeof(ChatCommands)))
                 {
-                    //ChatCommands command = (ChatCommands)ActivatorUtilities.CreateInstance(_provider, item);
-                    //dispatcher.Register(command.Register);
-                    //Commands.Add(command);
                     services.AddSingleton(typeof(ChatCommands), item);
                 }
             }

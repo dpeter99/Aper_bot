@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Aper_bot.Database;
 using Aper_bot.Database.Model;
 using DSharpPlus.Entities;
 
@@ -7,6 +8,8 @@ namespace Aper_bot.Events
 {
     public interface IMessageCreatedEvent
     {
+        public CoreDatabaseContext Db { get; }
+
         public Guild? Guild { get; }
 
         public User Author { get; }

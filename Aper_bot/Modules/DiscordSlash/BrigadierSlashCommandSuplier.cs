@@ -46,7 +46,7 @@ namespace Aper_bot.Modules.DiscordSlash
         SlashCommand? GetCommand(CommandNode<CommandExecutionContext> cmdNode)
         {
             var command = new ApplicationCommand();
-            command.Name = cmdNode.Name.Remove(0, 1);
+            command.Name = cmdNode.Name;
             command.Description = "top leve";
             var options = new List<ApplicationCommandOption>();
             //If all the nodes are literals we make them into subcommands
@@ -89,8 +89,8 @@ namespace Aper_bot.Modules.DiscordSlash
             command.Options = options.ToArray();
 
 
-            var t = new SlashCommand();
-            t._applicationCommand = command;
+            var t = new SlashCommand(command,"611652646721421463");
+            //t._applicationCommand = command;
             return t;
         }
 

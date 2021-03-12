@@ -27,7 +27,7 @@ namespace Aper_bot.Commands.Rules
 
         public override LiteralArgumentBuilder<CommandExecutionContext> Register(IArgumentContext<CommandExecutionContext> l)
         {
-            return l.Literal("/rule")
+            return l.Literal("rule")
                 .Then(l => l.Argument("id", Arguments.Integer(min: 0))
                     .Executes(SingleRule)
                 )
@@ -69,7 +69,7 @@ namespace Aper_bot.Commands.Rules
 
             var num = context.GetArgument<int>("num");
 
-            await context.Source.db.Entry(guild).Collection(g => g!.Rules).LoadAsync();
+            await context.Source.Db.Entry(guild).Collection(g => g!.Rules).LoadAsync();
 
             guild!.Rules.Sort((a, b) => a.Number - b.Number);
             var rule = guild!.Rules.Find(r => r.Number == num);
@@ -80,12 +80,12 @@ namespace Aper_bot.Commands.Rules
             }
 
             guild.Rules.Remove(rule);
-            context.Source.db.Remove(rule);
+            context.Source.Db.Remove(rule);
 
             guild.Rules.ContinuouslyNumber(((guildRule, i) => guildRule.Number = i), 1);
 
             discordMessageEvent.Respond("Removed");
-            await context.Source.db.SaveChangesAsync();
+            await context.Source.Db.SaveChangesAsync();
 
             await UpdateRules(discordMessageEvent);
             return;
@@ -102,7 +102,7 @@ namespace Aper_bot.Commands.Rules
 
             var num = context.GetArgument<int>("id");
 
-            await context.Source.db.Entry(guild).Collection(g => g!.Rules).LoadAsync();
+            await context.Source.Db.Entry(guild).Collection(g => g!.Rules).LoadAsync();
 
             guild!.Rules.Sort((a, b) => a.Number - b.Number);
             var rule = guild!.Rules.Find(r => r.Number == num);
@@ -129,8 +129,8 @@ namespace Aper_bot.Commands.Rules
                 GuildNotSetUp(discordMessageEvent);
             }
 
-            context.Source.db.Attach(guild);
-            await context.Source.db.Entry(guild).Collection(g => g!.Rules).LoadAsync();
+            context.Source.Db.Attach(guild);
+            await context.Source.Db.Entry(guild).Collection(g => g!.Rules).LoadAsync();
 
             var text = RulesText(guild);
 
@@ -142,7 +142,7 @@ namespace Aper_bot.Commands.Rules
             var message = await discordMessageEvent.Respond(embed.Build());
             guild.RulesMessageId = message.Id.ToString();
             guild.RulesChannelId = message.ChannelId.ToString();
-            await context.Source.db.SaveChangesAsync();
+            await context.Source.Db.SaveChangesAsync();
         }
 
         [CommandPermissionRequired(PermissionLevels.Admin)]
@@ -155,8 +155,8 @@ namespace Aper_bot.Commands.Rules
                 return;
             }
 
-            context.Source.db.Attach(guild);
-            await context.Source.db.Entry(guild).Collection(g => g!.Rules).LoadAsync();
+            context.Source.Db.Attach(guild);
+            await context.Source.Db.Entry(guild).Collection(g => g!.Rules).LoadAsync();
 
             guild.Rules.Sort((a, b) => a.Number - b.Number);
 
@@ -177,8 +177,8 @@ namespace Aper_bot.Commands.Rules
             string text = Arguments.GetString(context, "text");
             discordMessageEvent.Guild.Rules.Add(new Database.Model.GuildRule(num, text));
 
-            context.Source.db.Update(discordMessageEvent.Guild);
-            await context.Source.db.SaveChangesAsync();
+            context.Source.Db.Update(discordMessageEvent.Guild);
+            await context.Source.Db.SaveChangesAsync();
 
             //TODO: Nicer embed response
             await discordMessageEvent.Respond("Added");
@@ -197,8 +197,8 @@ namespace Aper_bot.Commands.Rules
             }
 
 
-            context.Source.db.Attach(guild);
-            await context.Source.db.Entry(guild).Collection(g => g!.Rules).LoadAsync();
+            context.Source.Db.Attach(guild);
+            await context.Source.Db.Entry(guild).Collection(g => g!.Rules).LoadAsync();
 
 
             var text = RulesText(guild);

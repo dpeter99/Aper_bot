@@ -37,7 +37,7 @@ namespace Aper_bot.Commands
 
         public override LiteralArgumentBuilder<CommandExecutionContext> Register(IArgumentContext<CommandExecutionContext> l)
         {
-            return l.Literal("/quote")
+            return l.Literal("quote")
                     .Then(q =>
                         q.Literal("add")
                             .Then(an=>
@@ -81,7 +81,7 @@ namespace Aper_bot.Commands
         [GuildRequiered(true)]
         private async Task RemoveQuote(CommandContext<CommandExecutionContext> ctx, IMessageCreatedEvent discordMessageEvent)
         {
-            var db = ctx.Source.db;
+            var db = ctx.Source.Db;
 
             var num = Arguments.GetInteger(ctx, "id");
 
@@ -90,8 +90,11 @@ namespace Aper_bot.Commands
             var quote = (from q in db.Quotes
                 where q.number == num && q.GuildID == guild!.ID
                 select q).FirstOrDefault();
+            await db.Entry(quote).Reference(r => r.Source).LoadAsync();
+            
             if (quote != null)
             {
+                
                 guild!.Quotes.Remove(quote);
                 await db.SaveChangesAsync();
 
@@ -119,7 +122,7 @@ namespace Aper_bot.Commands
 
         private async Task PrintQuote(CommandContext<CommandExecutionContext> ctx, IMessageCreatedEvent discordMessageEvent)
         {
-            var db = ctx.Source.db;
+            var db = ctx.Source.Db;
 
             var num = Arguments.GetInteger(ctx, "number");
 
@@ -157,15 +160,17 @@ namespace Aper_bot.Commands
 
         private async Task ListQuotes(CommandContext<CommandExecutionContext> ctx, IMessageCreatedEvent discordMessageEvent)
         {
-            var db = ctx.Source.db;
+            var db = ctx.Source.Db;
 
             var guild = discordMessageEvent.Guild;
             if (guild != null)
             {
                 await db.Entry(guild).Collection(g => g!.Quotes).LoadAsync();
+                
                 string text = "";
                 foreach (var item in guild.Quotes)
                 {
+                    await db.Entry(item).Reference(r => r.Source).LoadAsync();
                     text += $"\n{EmojiHelper.Number(item.number)} *{item.Text}* - by {item.SourceName}";
                 }
 
@@ -182,7 +187,7 @@ namespace Aper_bot.Commands
         [GuildRequiered(true)]
         private async Task AddQuote(CommandContext<CommandExecutionContext> ctx, IMessageCreatedEvent discordMessageEvent)
         {
-            var db = ctx.Source.db;
+            var db = ctx.Source.Db;
 
             User creator = discordMessageEvent.Author;
             User? source = null;

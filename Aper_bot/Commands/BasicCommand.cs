@@ -20,7 +20,7 @@ namespace Aper_bot.Commands
 
         public override LiteralArgumentBuilder<CommandExecutionContext> Register(IArgumentContext<CommandExecutionContext> l)
         {
-            return l.Literal("/greet", "Just a nice great ...")
+            return l.Literal("greet", "Just a nice great ...")
                         .Then(a =>
                             a.Argument("user", DiscordArgumentTypes.User())
                                 .Executes(Run)

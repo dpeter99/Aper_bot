@@ -16,13 +16,14 @@ namespace Aper_bot.Modules.CommandProcessing
 
         public CommandContext<CommandExecutionContext>? ctx;
 
-        public CoreDatabaseContext db;
+        public CoreDatabaseContext Db;
 
         public delegate Task Command(CommandContext<CommandExecutionContext> ctx, IMessageCreatedEvent discordMessageEvent);
 
         public CommandExecutionContext(IMessageCreatedEvent @event)
         {
             Event = @event;
+            Db = @event.Db;
         }
     }
 }

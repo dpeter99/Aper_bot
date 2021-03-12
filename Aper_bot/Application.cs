@@ -27,7 +27,7 @@ using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Events;
 
-
+/*
 namespace Aper_bot
 {
     class Application: Singleton<Application>
@@ -125,3 +125,4 @@ namespace Aper_bot
         }
     }
 }
+*/

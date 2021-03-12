@@ -95,7 +95,7 @@ namespace Aper_bot.Database.Model
         {
             get
             {
-                return _source?.Name ?? "Anonimus";
+                return _source?.Name ?? "Anonymous";
             }
         }
     }

@@ -1,17 +1,16 @@
-﻿using Aper_bot.Database.Model;
+﻿using System;
+using System.Threading.Tasks;
+using Aper_bot.Database;
+using Aper_bot.Database.Model;
+using Aper_bot.Events;
+using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using DSharpPlus.Entities;
-
-namespace Aper_bot.Events
+namespace Aper_bot.Modules.Discord
 {
     public class DiscordMessageCreatedEvent : CommandSourceStack<MessageCreateEventArgs>, IMessageCreatedEvent
     {
+        public CoreDatabaseContext Db => db;
 
         public Guild? Guild { get; private set; }
 
@@ -60,7 +59,7 @@ namespace Aper_bot.Events
             {
                 Name = "Aper_bot"
             };
-            builder.Color = new Optional<DiscordColor>(new DiscordColor(255, 0, 0));
+            builder.Color = new Optional<DiscordColor>(new DiscordColor(0, 150, 0));
             builder.Timestamp = DateTimeOffset.Now;
             
             builder.Description = text;

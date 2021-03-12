@@ -5,8 +5,6 @@ namespace Aper_bot.Modules.CommandProcessing
 {
     public static class BrigadierExtensions
     {
-
-
         public static TThis Executes<TThis, TNode>(this ArgumentBuilder<CommandExecutionContext, TThis, TNode> t, CommandExecutionContext.Command command) 
             where TThis : ArgumentBuilder<CommandExecutionContext, TThis, TNode> 
             where TNode : CommandNode<CommandExecutionContext>

@@ -2,20 +2,21 @@
 using Aper_bot.Hosting;
 using Aper_bot.Hosting.Database;
 using Aper_bot.Modules.DiscordSlash.Database;
+using Extensions.Hosting.AsyncInitialization;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 namespace Aper_bot.Modules.DiscordSlash
 {
-    //[Module("Discord Slash")]
+    [Module("Discord Slash")]
     public class DiscordSlashModule: IModule
     {
         
         public void RegisterServices(HostBuilderContext ctx,IServiceCollection services)
         {
             services.AddSingleton<SlashCommandHandler>();
-            //services.AddAsyncInitializer(
-            //    serviceProvider => ((SlashCommandHandler) serviceProvider.GetService<SlashCommandHandler>())!);
+            services.AddSingleton<IHostedService>(
+                serviceProvider => serviceProvider.GetService<SlashCommandHandler>()!);
             
             //services.AddSingleton<IHostedService, SlashCommandHandler>(
             //    serviceProvider => ((SlashCommandHandler) serviceProvider.GetService<SlashCommandHandler>())!);

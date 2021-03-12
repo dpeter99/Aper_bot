@@ -6,6 +6,7 @@ using Aper_bot.Events;
 using Aper_bot.Modules.CommandProcessing;
 using Aper_bot.Modules.CommandProcessing.Attributes;
 using Aper_bot.Modules.CommandProcessing.DiscordArguments;
+using Aper_bot.Modules.Discord;
 using Brigadier.NET.Builder;
 using Brigadier.NET.Context;
 using Microsoft.EntityFrameworkCore;
@@ -27,7 +28,7 @@ namespace Aper_bot.Commands
 
         public override LiteralArgumentBuilder<CommandExecutionContext> Register(IArgumentContext<CommandExecutionContext> l)
         {
-            return l.Literal("/user")
+            return l.Literal("user")
                     .Then(
                         a =>
                         a.Literal("info")
@@ -53,7 +54,7 @@ namespace Aper_bot.Commands
             {
                 
                 DSharpPlus.EventArgs.MessageCreateEventArgs @event = dmce.@event;
-                var user = (from u in ctx.Source.db.Users
+                var user = (from u in ctx.Source.Db.Users
                         where u.Name == @event.Author.Username
                         select u)
                     .FirstOrDefault();
@@ -64,8 +65,8 @@ namespace Aper_bot.Commands
                 }
                 else
                 {
-                    ctx.Source.db.Add(new User(@event.Author));
-                    ctx.Source.db.SaveChangesAsync().Wait();
+                    ctx.Source.Db.Add(new User(@event.Author));
+                    ctx.Source.Db.SaveChangesAsync().Wait();
                     @event.Message.RespondAsync($"I have never see this person. Gona remember {@event.Author.Username}.");
                 }
             }

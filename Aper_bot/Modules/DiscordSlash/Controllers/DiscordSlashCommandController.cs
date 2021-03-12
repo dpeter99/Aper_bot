@@ -63,10 +63,11 @@ namespace Aper_bot.Modules.DiscordSlash.Controllers
                 var response = await _slashModule.HandleWebhookPost(raw);
                 if (response is not null) // ... if the clients response is not null ...
                     return Ok(JsonConvert.SerializeObject(response)); // ... serialize it and send it.
+                
                 else return BadRequest("Failed to parse request JSON."); // ... or send a bad request message.
                 
             }
-            return BadRequest("Failed to parse request JSON.");
+            //return BadRequest("Failed to parse request JSON.");
         }
     }
 }

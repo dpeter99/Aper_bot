@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Aper_bot.Events;
+using Aper_bot.Modules.Discord;
 
 namespace Aper_bot.Modules.CommandProcessing.Attributes
 {
@@ -35,7 +36,7 @@ namespace Aper_bot.Modules.CommandProcessing.Attributes
                 if (atribute == null)
                     throw new Exception("Bad input");
                 
-                var db = context.db;
+                var db = context.Db;
 
                 if (atribute.Setup)
                 {

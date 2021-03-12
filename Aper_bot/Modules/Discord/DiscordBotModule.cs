@@ -11,8 +11,7 @@ namespace Aper_bot.Modules.Discord
         public void RegisterServices(HostBuilderContext ctx,IServiceCollection services)
         {
             services.AddSingleton<DiscordBot>();
-            services.AddSingleton<IHostedService, DiscordBot>(
-                serviceProvider => serviceProvider.GetService<DiscordBot>()!);
+            services.AddSingleton<IHostedService, DiscordBotStarter>();
         }
     }
 }

@@ -10,7 +10,7 @@ namespace Aper_bot.Database.Model
 {
     public class Entity
     {
-        //[Key]
+        [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int ID { get; set; }
     }
