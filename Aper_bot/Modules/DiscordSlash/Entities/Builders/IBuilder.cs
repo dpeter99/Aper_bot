@@ -4,11 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Aper_bot
+namespace DSharpPlus.SlashCommands.Entities.Builders
 {
-    public class Config
+    public interface IBuilder<T>
     {
-        public bool CaseSensitive { get; set; }
-        
+        public T Build();
     }
 }

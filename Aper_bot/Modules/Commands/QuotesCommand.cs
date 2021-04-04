@@ -14,7 +14,7 @@ using Brigadier.NET.Context;
 using DSharpPlus.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace Aper_bot.Commands
+namespace Aper_bot.Modules.Commands
 {
     /// <summary>
     /// 

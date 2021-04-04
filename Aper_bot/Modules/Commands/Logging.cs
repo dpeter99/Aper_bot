@@ -4,7 +4,7 @@ using Aper_bot.EventBus;
 using DSharpPlus.EventArgs;
 using Microsoft.Extensions.Hosting;
 
-namespace Aper_bot.Commands
+namespace Aper_bot.Modules.Commands
 {
 
     class Logging : IHostedService

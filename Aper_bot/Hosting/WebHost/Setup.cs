@@ -5,40 +5,44 @@ using FluffySpoon.AspNet.LetsEncrypt;
 using FluffySpoon.AspNet.LetsEncrypt.Certes;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace Aper_bot.Hosting.WebHost
 {
     public class Setup
     {
+        private readonly IConfiguration _conf;
         //private IServiceCollection _serviceProvider;
         
-        public Setup()
+        public Setup(IConfiguration conf)
         {
-
+            _conf = conf;
         }
         
         public void ConfigureServices(IServiceCollection services)
         {
-            
-            
+            CertConfig conf = new CertConfig();
+            _conf.Bind("Hosting:CertConfig", conf);
+
             services.AddRouting();
-            
+
             //the following line adds the automatic renewal service.
             services.AddFluffySpoonLetsEncrypt(new LetsEncryptOptions()
             {
-                Email = "dpeter99@gmail.com", //LetsEncrypt will send you an e-mail here when the certificate is about to expire
+                Email = conf.EmailAddress, // "dpeter99@gmail.com", //LetsEncrypt will send you an e-mail here when the certificate is about to expire
                 UseStaging = false, //switch to true for testing
-                Domains = new[] { "staging.lab.aper-lab.com" },
+                Domains = conf.DomainNames,// new[] { "staging.lab.aper-lab.com" },
                 TimeUntilExpiryBeforeRenewal = TimeSpan.FromDays(30), //renew automatically 30 days before expiry
                 TimeAfterIssueDateBeforeRenewal = TimeSpan.FromDays(7), //renew automatically 7 days after the last certificate was issued
                 CertificateSigningRequest = new CsrInfo() //these are your certificate details
                 {
-                    CountryName = "Hungary",
-                    Locality = "HU",
-                    Organization = "Aper Lab",
-                    OrganizationUnit = "Labs",
-                    State = "CS"
+                    CountryName = conf.Country,
+                    Locality = conf.Country,
+                    Organization = conf.Organization,
+                    OrganizationUnit = conf.OrganizationUnit ?? "",
+                    State = conf.State ?? ""
                 }
             });
 

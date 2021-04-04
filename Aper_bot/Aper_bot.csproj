@@ -19,12 +19,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="DSharpPlus" Version="4.0.0-nightly-00773" />
-    <PackageReference Include="DSharpPlus.CommandsNext" Version="4.0.0-nightly-00773" />
+    <PackageReference Include="DSharpPlus" Version="4.0.0-nightly-00815" />
+    <PackageReference Include="DSharpPlus.CommandsNext" Version="4.0.0-nightly-00815" />
     <PackageReference Include="Extensions.Hosting.AsyncInitialization" Version="1.0.0" />
     <PackageReference Include="FluffySpoon.AspNet.LetsEncrypt" Version="1.163.0" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.2" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="5.0.2">
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.4" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="5.0.4">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
@@ -40,8 +40,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Brigadier.NET\Brigadier.NET\Brigadier.NET.csproj" />
-    <ProjectReference Include="..\DSharpPlus.SlashCommands\DSharpPlus.SlashCommands\DSharpPlus.SlashCommands.csproj" />
+    <ProjectReference Include="..\..\..\..\Mars\Mars\Mars\Mars.csproj" />
+    <!-- <ProjectReference Include="..\DSharpPlus.SlashCommands\DSharpPlus.SlashCommands\DSharpPlus.SlashCommands.csproj" />-->
   </ItemGroup>
 
   <ItemGroup>

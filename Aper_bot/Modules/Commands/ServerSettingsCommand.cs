@@ -7,6 +7,7 @@ using Aper_bot.Modules.CommandProcessing;
 using Aper_bot.Modules.CommandProcessing.Attributes;
 using Aper_bot.Modules.CommandProcessing.DiscordArguments;
 using Aper_bot.Modules.Discord;
+using Aper_bot.Modules.Discord.Config;
 using Brigadier.NET;
 using Brigadier.NET.Builder;
 using Brigadier.NET.Context;
@@ -15,16 +16,16 @@ using DSharpPlus.Entities;
 using Microsoft.Extensions.Options;
 using Serilog;
 
-namespace Aper_bot.Commands
+namespace Aper_bot.Modules.Commands
 {
     [CommandProvider]
     class ServerSettingsCommand : ChatCommands
     {
         //IDbContextFactory<DatabaseContext> dbContextFactory;
         ILogger logger;
-        IOptions<Config> config;
+        IOptions<DiscordConfig> config;
 
-        public ServerSettingsCommand(ILogger log, IOptions<Config> options)
+        public ServerSettingsCommand(ILogger log, IOptions<DiscordConfig> options)
         {
             //dbContextFactory = db;
             logger = log;

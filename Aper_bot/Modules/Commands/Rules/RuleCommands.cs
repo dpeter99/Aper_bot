@@ -13,7 +13,7 @@ using Brigadier.NET.Context;
 using DSharpPlus.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace Aper_bot.Commands.Rules
+namespace Aper_bot.Modules.Commands.Rules
 {
     [CommandProvider]
     class RuleCommands : ChatCommands

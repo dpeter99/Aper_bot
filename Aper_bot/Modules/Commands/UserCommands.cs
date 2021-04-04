@@ -11,7 +11,7 @@ using Brigadier.NET.Builder;
 using Brigadier.NET.Context;
 using Microsoft.EntityFrameworkCore;
 
-namespace Aper_bot.Commands
+namespace Aper_bot.Modules.Commands
 {
     [CommandProvider]
     class UserCommands : ChatCommands

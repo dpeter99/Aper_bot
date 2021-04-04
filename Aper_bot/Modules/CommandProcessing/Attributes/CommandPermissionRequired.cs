@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Aper_bot.Events;
 using Aper_bot.Modules.Discord;
+using Aper_bot.Modules.Discord.Config;
 using Microsoft.Extensions.Options;
 
 namespace Aper_bot.Modules.CommandProcessing.Attributes
@@ -30,9 +31,9 @@ namespace Aper_bot.Modules.CommandProcessing.Attributes
 
         public class Condition : CommandCondition
         {
-            private readonly IOptions<Config> _conf;
+            private readonly IOptions<DiscordConfig> _conf;
 
-            public Condition(IOptions<Aper_bot.Config> conf)
+            public Condition(IOptions<DiscordConfig> conf)
             {
                 _conf = conf;
             }

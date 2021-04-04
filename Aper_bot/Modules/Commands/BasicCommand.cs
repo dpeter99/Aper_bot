@@ -5,7 +5,7 @@ using Brigadier.NET.Builder;
 using Brigadier.NET.Context;
 using Serilog;
 
-namespace Aper_bot.Commands
+namespace Aper_bot.Modules.Commands
 {
     [CommandProvider]
     class BasicCommand: ChatCommands

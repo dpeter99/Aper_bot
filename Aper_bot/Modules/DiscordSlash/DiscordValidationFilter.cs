@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Text;
 using Aper_bot.Hosting.WebHost;
+using Aper_bot.Modules.Discord.Config;
 using Aper_bot.Util.Crypt;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
@@ -12,19 +13,19 @@ namespace Aper_bot.Modules.DiscordSlash
 {
     public class DiscordValidationFilter: ActionFilterAttribute //IAsyncActionFilter 
     {
-        private readonly Config _settings;
+        private readonly IOptions<DiscordConfig> _settings;
         private readonly ILogger _logger;
 
-        public DiscordValidationFilter(IOptions<Config> options, ILogger<DiscordValidationFilter> logger)
+        public DiscordValidationFilter(IOptions<DiscordConfig> options, ILogger<DiscordValidationFilter> logger)
         {
-            _settings = options.Value;
+            _settings = options;
             _logger = logger;
             //Order = 1;
         }
 
         public override void OnActionExecuting(ActionExecutingContext context)
         {
-            if (_settings.PublicKey == null)
+            if (_settings.Value.PublicKey == null)
             {
                 return;
             }
@@ -39,7 +40,7 @@ namespace Aper_bot.Modules.DiscordSlash
                 // ... convert the signature and public key to byte[] to use in verification ...
                 var byteSig = HexConverter.HexStringToByteArray(signature);
                 // NOTE: This reads your Public Key that you need to store somewhere.
-                var byteKey = HexConverter.HexStringToByteArray(_settings.PublicKey);
+                var byteKey = HexConverter.HexStringToByteArray(_settings.Value.PublicKey);
                 // ... read the body from the request ...
 
 

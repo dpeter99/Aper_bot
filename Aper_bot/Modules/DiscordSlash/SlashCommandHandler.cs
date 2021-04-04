@@ -12,6 +12,7 @@ using Aper_bot.Database.Model;
 using Aper_bot.Events;
 using Aper_bot.Modules.CommandProcessing;
 using Aper_bot.Modules.Discord;
+using Aper_bot.Modules.Discord.Config;
 using Aper_bot.Modules.DiscordSlash.Database;
 using Aper_bot.Modules.DiscordSlash.Database.Model;
 using Aper_bot.Util;
@@ -54,7 +55,7 @@ namespace Aper_bot.Modules.DiscordSlash
             IHttpClientFactory httpClientFactory,
             DiscordBot bot,
             ISlashCommandSuplier commandSuplier,
-            IOptions<Config> configuration,
+            IOptions<DiscordConfig> configuration,
             HttpClient http,
             IDbContextFactory<SlashDbContext> dbContextFactory)
         {
@@ -115,34 +116,36 @@ namespace Aper_bot.Modules.DiscordSlash
             // ... build our update and delete lists ...
             List<SlashCommand> toUpdate = new();
             List<SlashCommand> toRemove = new();
+
+            
             
             foreach (var cmd in discordCmds)
             {
-                // ... see if Commands contains the command name ...
                 var match = suppliedCommands.FirstOrDefault(c => c._applicationCommand.Id == cmd._applicationCommand.Id);
                 if (match is not null)
                 {
-                    // ... if it is there, and the version number is lower in the saved state ...
                     if (cmd._applicationCommand != match._applicationCommand)
                     {
-                        // ... queue the command for an update.
                         toUpdate.Add(cmd);
-                    }
-                    else
-                    {
-                        // ... otherwise, udpate the slash command with the saved values.
-                        //slashCommand.CommandId = cmd.CommandId;
-                        //slashCommand.GuildId = cmd.GuildId;
-                        //slashCommand.ApplicationId = BotId;
                     }
                 }
                 else
                 {
-                    // ... if its in the config but not in the code
                     // queue the command for deletion.
                     toRemove.Add(cmd);
                 }
             }
+            
+            foreach (var cmd in suppliedCommands)
+            {
+                var match = discordCmds.FirstOrDefault(c => c._applicationCommand.Id == cmd._applicationCommand.Id);
+                if (match is null)
+                {
+                    // queue the command for deletion.
+                    toUpdate.Add(cmd);
+                }
+            }
+            
 
             //Remove / Update
             // ... then update/add the commands ...
@@ -338,30 +341,29 @@ namespace Aper_bot.Modules.DiscordSlash
 
         private void ParseOptions(ApplicationCommandInteractionDataOption[] data, ApplicationCommandOption[] option, CommandArguments commandArguments)
         {
-            if (data.Length > 0)
+            
+            foreach (var dataOption in data)
             {
-                if (data.Length == 1)
+                var commandOption = option.FirstOrDefault(i => i.Name == dataOption.Name);
+                if (commandOption is not null)
                 {
-                    var op = data[0];
-                    var next = option.SingleOrDefault(o => o.Name == op.Name);
-                    if (next is not null)
+                    if (commandOption.Options is not null)
                     {
-                        ParseOptions(op.Options, next.Options, commandArguments);
+                        ParseOptions(dataOption.Options,commandOption.Options,commandArguments);
                     }
-                }
-                else
-                {
-                    if (option.Length == data.Length)
+                    
+                    
+
+                    if (dataOption.Value is not null)
                     {
-                        foreach (var commandOption in data)
-                        {
-                            commandOption.Value?.Let(o => { commandArguments.args.Add(commandOption.Name, o.ToString()); });
-                        }
+                        commandArguments.args.Add(dataOption.Name,dataOption.Value.ToString());
                     }
+                    
                 }
             }
+            
 
-            Debugger.Break();
+            //Debugger.Break();
         }
     }
 

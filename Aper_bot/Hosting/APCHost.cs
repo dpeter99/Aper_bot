@@ -157,6 +157,9 @@ namespace Aper_bot.Hosting
             
             services.Configure<Config>(ctx.Configuration.GetSection("Config"));
             services.Configure<DatabaseSettings>(ctx.Configuration.GetSection("Database"));
+            
+            services.Configure<HostingConfig>(ctx.Configuration.GetSection("Hosting"));
+            services.Configure<CertConfig>(ctx.Configuration.GetSection("Hosting:CertConfig"));
 
             services.AddAsyncInitializer<DatabaseMigrator>();
             

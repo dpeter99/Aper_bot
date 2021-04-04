@@ -6,6 +6,7 @@ using Aper_bot.Database;
 using Aper_bot.EventBus;
 using Aper_bot.Events;
 using Aper_bot.Modules.CommandProcessing.Commands;
+using Aper_bot.Modules.Discord.Config;
 using Aper_bot.Util;
 using Aper_bot.Util.Singleton;
 using Certes.Acme.Resource;
@@ -55,7 +56,7 @@ namespace Aper_bot.Modules.Discord
 
         readonly IDbContextFactory<CoreDatabaseContext> dbContextFactory;
 
-        public DiscordBot(ILogger<DiscordBot> logger, ICommandTree commandTree, IOptions<Config> configuration, IDbContextFactory<CoreDatabaseContext> fac, ILoggerProvider loggerProvider)
+        public DiscordBot(ILogger<DiscordBot> logger, ICommandTree commandTree, IOptions<DiscordConfig> configuration, IDbContextFactory<CoreDatabaseContext> fac, ILoggerProvider loggerProvider)
         {
 
             Log = logger;
