@@ -1,8 +1,11 @@
-﻿using Aper_bot.Modules.CommandProcessing;
+﻿using System.Collections.Generic;
+using Aper_bot.Events;
+using Aper_bot.Modules.CommandProcessing;
 using Aper_bot.Modules.CommandProcessing.Attributes;
 using Aper_bot.Modules.CommandProcessing.DiscordArguments;
-using Brigadier.NET.Builder;
-using Brigadier.NET.Context;
+using DSharpPlus.Entities;
+using Mars;
+using Mars.Arguments;
 using Serilog;
 
 namespace Aper_bot.Modules.Commands
@@ -18,22 +21,28 @@ namespace Aper_bot.Modules.Commands
             //commandHandler.dispatcher.Register(Register);
         }
 
-        public override LiteralArgumentBuilder<CommandExecutionContext> Register(IArgumentContext<CommandExecutionContext> l)
+        public override IEnumerable<CommandNode> Register()
         {
-            return l.Literal("greet", "Just a nice great ...")
-                        .Then(a =>
-                            a.Argument("user", DiscordArgumentTypes.User())
-                                .Executes(Run)
-                        );
+            var great = new Mars.LiteralNode("greet");
+            great.NextArgument("user", DiscordArgumentTypes.User()).ThisCalls( new CommandFunction(Run));
+
+            return new[] {great};
         }
 
-        private int Run(CommandContext<CommandExecutionContext> context)
+        private int Run(ParseResult result, IMessageCreatedEvent context)
         {
+            /*
             string messageTemplate = "Hi! " + DiscordArgumentTypes.GetUser(context, "user").Username + " <a:bolbreach:780085145079119873>";
             Logger.Information(messageTemplate);
             //context.Source.Event.@event.Message.RespondAsync(messageTemplate);
 
             context.Source.Event.Respond(messageTemplate);
+            */
+            DiscordUser u = (DiscordUser) result.Args["user"];
+            
+            string messageTemplate = "Hi! " + u.Username + " <a:bolbreach:780085145079119873>";
+            
+            context.RespondBasic(messageTemplate);
             
             return 1;
         }

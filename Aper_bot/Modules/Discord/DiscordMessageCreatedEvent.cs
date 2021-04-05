@@ -72,6 +72,10 @@ namespace Aper_bot.Modules.Discord
         {
             return await @event.Message.RespondAsync(embed: text);
         }
-        
+
+        public async Task<DiscordMessage> RespondBasic(string text)
+        {
+            return await @event.Message.RespondAsync(text);
+        }
     }
 }

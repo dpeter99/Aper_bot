@@ -1,16 +1,16 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using Aper_bot.Events;
 using Aper_bot.Modules.Discord;
-using Brigadier.NET;
-using Brigadier.NET.Builder;
-using Brigadier.NET.Context;
+using Mars;
 
 namespace Aper_bot.Modules.CommandProcessing
 {
     public abstract class ChatCommands
     {
-        public abstract LiteralArgumentBuilder<CommandExecutionContext> Register(IArgumentContext<CommandExecutionContext> l);
+        public abstract IEnumerable<CommandNode> Register();
 
+        /*
         protected Command<CommandExecutionContext> AsyncExecue(CommandExecutionContext.Command command)
         {
             return (ctx) =>
@@ -23,5 +23,6 @@ namespace Aper_bot.Modules.CommandProcessing
         }
 
         protected delegate Task AsyncCommand(CommandContext<CommandExecutionContext> ctx, DiscordMessageCreatedEvent discordMessageEvent);
+        */
     }
 }

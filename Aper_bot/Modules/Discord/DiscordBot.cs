@@ -49,18 +49,18 @@ namespace Aper_bot.Modules.Discord
 
         ILogger<DiscordBot> Log;
 
-        private readonly ICommandTree _commandTree;
+        private readonly ICommandProcessor _commandProcessor;
 
         //private readonly ICommandExecutor _commandExecutor;
         //readonly IEventBus eventBus;
 
         readonly IDbContextFactory<CoreDatabaseContext> dbContextFactory;
 
-        public DiscordBot(ILogger<DiscordBot> logger, ICommandTree commandTree, IOptions<DiscordConfig> configuration, IDbContextFactory<CoreDatabaseContext> fac, ILoggerProvider loggerProvider)
+        public DiscordBot(ILogger<DiscordBot> logger, ICommandProcessor commandProcessor, IOptions<DiscordConfig> configuration, IDbContextFactory<CoreDatabaseContext> fac, ILoggerProvider loggerProvider)
         {
 
             Log = logger;
-            _commandTree = commandTree;
+            _commandProcessor = commandProcessor;
             //_commandExecutor = commandExecutor;
             //eventBus = bus;
             dbContextFactory = fac;
@@ -110,7 +110,7 @@ namespace Aper_bot.Modules.Discord
         {
             var new_event = new DiscordMessageCreatedEvent(messageCreateArgs,dbContextFactory.CreateDbContext());
 
-            _commandTree.ProcessMessage(new_event);
+            _commandProcessor.ProcessMessage(new_event);
 
             return Task.CompletedTask;
         }

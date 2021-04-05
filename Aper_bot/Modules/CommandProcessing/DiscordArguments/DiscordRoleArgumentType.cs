@@ -6,15 +6,12 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Aper_bot.Events;
 using Aper_bot.Modules.Discord;
-using Aper_bot.Util;
-using Aper_bot.Util.Brigadier;
-using Brigadier.NET;
-using Brigadier.NET.Exceptions;
 using DSharpPlus.Entities;
 using Microsoft.Extensions.Options;
 
 namespace Aper_bot.Modules.CommandProcessing.DiscordArguments
 {
+    /*
     class DiscordRoleArgumentType : AsyncArgument<DiscordRole>
     {
         private static readonly IEnumerable<string> UserExamples = new[] { "@username", "794664673487749131", "..." };
@@ -43,7 +40,7 @@ namespace Aper_bot.Modules.CommandProcessing.DiscordArguments
                 return "DiscordUser()";   
         }
 
-        public async override Task<DiscordRole> Process<TSource>(IStringReader reader, TSource source)
+        public async override Task<DiscordRole> Process<TSource>(ref string reader, TSource source)
         {
             var prew_cursor = reader.Cursor;
 
@@ -95,4 +92,5 @@ namespace Aper_bot.Modules.CommandProcessing.DiscordArguments
 
         public override IEnumerable<string> Examples => UserExamples;
     }
+    */
 }

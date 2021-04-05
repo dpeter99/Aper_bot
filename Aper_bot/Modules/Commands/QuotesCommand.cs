@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Aper_bot.Database.Model;
@@ -8,10 +9,9 @@ using Aper_bot.Modules.CommandProcessing.Attributes;
 using Aper_bot.Modules.CommandProcessing.DiscordArguments;
 using Aper_bot.Modules.Discord;
 using Aper_bot.Util.Discord;
-using Brigadier.NET;
-using Brigadier.NET.Builder;
-using Brigadier.NET.Context;
 using DSharpPlus.Entities;
+using Mars;
+using Mars.Arguments;
 using Microsoft.EntityFrameworkCore;
 
 namespace Aper_bot.Modules.Commands
@@ -35,57 +35,44 @@ namespace Aper_bot.Modules.Commands
             logger = log;
         }
 
-        public override LiteralArgumentBuilder<CommandExecutionContext> Register(IArgumentContext<CommandExecutionContext> l)
+        public override IEnumerable<CommandNode> Register()
         {
-            return l.Literal("quote")
-                    .Then(q =>
-                        q.Literal("add")
-                            .Then(an=>
-                                an.Literal("anonym", "Add a quote without knowing the person it came from").Then(a =>
-                                    a.Argument("text", Arguments.GreedyString())
-                                        .Executes(AddQuote)
-                                )
-                            )
-                            .Then(s =>
-                                s.Literal("from").Then(a =>
-                                    a.Argument("source", DiscordArgumentTypes.User())
-                                        .Then(t =>
-                                            t.Argument("text", Arguments.GreedyString())
-                                                .Executes(AddQuote)
-                                        )
-                                )
-                            )
-                    )
-                    .Then(l =>
-                        l.Literal("list")
-                            .Then(u =>
-                                u.Argument("user", DiscordArgumentTypes.User())
-                                    .Executes(ListQuotes)
-                            )
-                            .Executes(ListQuotes)
-                    )
-                    .Then(l =>
-                        l.Literal("remove")
-                            .Then(u =>
-                                u.Argument("id", Arguments.Integer())
-                                    .Executes(RemoveQuote)
-                            )
-                    )
-                    .Then(s =>
-                        s.Argument("number", Arguments.Integer())
-                            .Executes(PrintQuote)
-                    )
-                ;
+            var quote = new LiteralNode("quote");
+
+            var add = quote.NextLiteral("add");
+            add.NextLiteral("anonymous")
+                .NextArgument("text",new LongStringArgument())
+                .ThisCalls(new CommandFunction(AddQuote));
+            
+            add.NextLiteral("from")
+                .NextArgument("source", DiscordArgumentTypes.User())
+                .NextArgument("text",new LongStringArgument())
+                .ThisCalls(new CommandFunction(AddQuote));
+
+            
+            var list = quote.NextLiteral("list");
+
+            list.NextLiteral("all").ThisCalls(new CommandFunction(ListQuotes));
+
+            var remove = quote.NextLiteral("remove");
+            remove.NextArgument("id", new IntArgument()).ThisCalls(new CommandFunction(RemoveQuote));
+
+            quote.NextArgument("number", new IntArgument()).ThisCalls(new CommandFunction(PrintQuote));
+            
+            return new[] {quote};
+            
         }
 
-        [GuildRequiered(true)]
-        private async Task RemoveQuote(CommandContext<CommandExecutionContext> ctx, IMessageCreatedEvent discordMessageEvent)
+      
+        
+        [GuildRequiered]
+        private async Task RemoveQuote(ParseResult result, IMessageCreatedEvent context)
         {
-            var db = ctx.Source.Db;
+            var db = context.Db;
 
-            var num = Arguments.GetInteger(ctx, "id");
+            var num = result.GetIntArg("id");
 
-            var guild = discordMessageEvent.Guild;
+            var guild = context.Guild;
 
             var quote = (from q in db.Quotes
                 where q.number == num && q.GuildID == guild!.ID
@@ -111,7 +98,7 @@ namespace Aper_bot.Modules.Commands
                 };
 
 
-                discordMessageEvent.Respond(embed.Build());
+                await context.Respond(embed.Build());
                 return;
             }
             else
@@ -120,13 +107,14 @@ namespace Aper_bot.Modules.Commands
             }
         }
 
-        private async Task PrintQuote(CommandContext<CommandExecutionContext> ctx, IMessageCreatedEvent discordMessageEvent)
+        [GuildRequiered]
+        private async Task PrintQuote(ParseResult result, IMessageCreatedEvent context)
         {
-            var db = ctx.Source.Db;
+            var db = context.Db;
 
-            var num = Arguments.GetInteger(ctx, "number");
+            var num = result.GetIntArg("number");
 
-            var guild = discordMessageEvent.Guild;
+            var guild = context.Guild;
             if (guild != null)
             {
                 var quote = (from q in db.Quotes.Include(a => a.Source)
@@ -152,17 +140,18 @@ namespace Aper_bot.Modules.Commands
                     };
 
 
-                    discordMessageEvent.Respond(embed.Build());
-                    return;
+                    await context.Respond(embed.Build());
                 }
             }
         }
 
-        private async Task ListQuotes(CommandContext<CommandExecutionContext> ctx, IMessageCreatedEvent discordMessageEvent)
+        
+        [GuildRequiered]
+        private async Task ListQuotes(ParseResult result, IMessageCreatedEvent context)
         {
-            var db = ctx.Source.Db;
+            var db = context.Db;
 
-            var guild = discordMessageEvent.Guild;
+            var guild = context.Guild;
             if (guild != null)
             {
                 await db.Entry(guild).Collection(g => g!.Quotes).LoadAsync();
@@ -180,36 +169,37 @@ namespace Aper_bot.Modules.Commands
                 embed.Author = null;
 
 
-                await discordMessageEvent.Respond(embed.Build());
+                await context.Respond(embed.Build());
             }
         }
+        
 
-        [GuildRequiered(true)]
-        private async Task AddQuote(CommandContext<CommandExecutionContext> ctx, IMessageCreatedEvent discordMessageEvent)
+        [GuildRequiered]
+        private async Task AddQuote(ParseResult result, IMessageCreatedEvent context)
         {
-            var db = ctx.Source.Db;
+            var db = context.Db;
 
-            User creator = discordMessageEvent.Author;
+            User creator = context.Author;
             User? source = null;
 
-            DateTime date = discordMessageEvent.Time;
+            DateTime date = context.Time;
 
-            string text = Arguments.GetString(ctx, "text");
+            string text = result.Args["text"].ToString();
 
 
-            if (ctx.HasArgument<string>("source"))
+            if (result.Args.ContainsKey("source"))
             {
-                var user = DiscordArgumentTypes.GetUser(ctx, "source");
+                var user = (DiscordUser) result.Args["source"];
                 source = db.GetOrCreateUserFor(user);
             }
 
-            await db.Entry(discordMessageEvent.Guild).Collection(d => d!.Quotes).LoadAsync();
+            await db.Entry(context.Guild).Collection(d => d!.Quotes).LoadAsync();
 
-            discordMessageEvent.Guild!.Quotes.Sort((a, b) => a.number - b.number);
-            var last = discordMessageEvent.Guild.Quotes.LastOrDefault();
+            context.Guild!.Quotes.Sort((a, b) => a.number - b.number);
+            var last = context.Guild.Quotes.LastOrDefault();
             var next_num = last?.number + 1 ?? 0;
 
-            var entity = new Quote(creator.ID, source?.ID, discordMessageEvent.Guild.ID, date, DateTime.MinValue, text, null,
+            var entity = new Quote(creator.ID, source?.ID, context.Guild.ID, date, DateTime.MinValue, text, null,
                 next_num);
             db.Add(entity);
 
@@ -222,9 +212,11 @@ namespace Aper_bot.Modules.Commands
                 Text = $"by {entity.SourceName}"
             };
 
-            await discordMessageEvent.Respond(embed.Build());
+            await context.Respond(embed.Build());
 
             await db.SaveChangesAsync();
         }
+        
+        
     }
 }

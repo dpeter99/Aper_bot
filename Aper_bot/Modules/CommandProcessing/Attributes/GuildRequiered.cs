@@ -16,7 +16,7 @@ namespace Aper_bot.Modules.CommandProcessing.Attributes
             set => _setup = value;
         }
         
-        public GuildRequiered(bool setup)
+        public GuildRequiered(bool setup = true)
         {
             _setup = setup;
         }

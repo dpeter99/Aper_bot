@@ -17,8 +17,6 @@ using Aper_bot.Modules.DiscordSlash.Database;
 using Aper_bot.Modules.DiscordSlash.Database.Model;
 using Aper_bot.Util;
 using Aper_bot.Util.Discord;
-using Brigadier.NET;
-using Brigadier.NET.Context;
 using DSharpPlus.SlashCommands.Entities;
 using Extensions.Hosting.AsyncInitialization;
 using Microsoft.EntityFrameworkCore;
@@ -315,7 +313,7 @@ namespace Aper_bot.Modules.DiscordSlash
     {
         public ApplicationCommand _applicationCommand;
 
-        public Command<CommandContext<CommandArguments>> run;
+        //public Command<CommandContext<CommandArguments>> run;
 
         public Snowflake? _guild;
 

@@ -17,11 +17,11 @@ namespace Aper_bot.Modules.CommandProcessing
         {
             services.Configure<CommandBaseConfig>(ctx.Configuration.GetSection("CommandsConfig"));
             
-            services.AddSingleton<ICommandTree,CommandTree>();
+            services.AddSingleton<ICommandProcessor,CommandProcessor>();
             services.AddSingleton<IAsyncInitializer>(
-                serviceProvider => ((CommandTree) serviceProvider.GetService<ICommandTree>())!);
+                serviceProvider => ((CommandProcessor) serviceProvider.GetService<ICommandProcessor>())!);
             
-            services.AddSingleton<ISlashCommandSuplier,BrigadierSlashCommandSuplier>();
+            //services.AddSingleton<ISlashCommandSuplier,BrigadierSlashCommandSuplier>();
             
             var commands = Assembly.GetExecutingAssembly().DefinedTypes.Where(e => e.CustomAttributes.Any(a => a.AttributeType == typeof(CommandProviderAttribute)));
             foreach (var item in commands)

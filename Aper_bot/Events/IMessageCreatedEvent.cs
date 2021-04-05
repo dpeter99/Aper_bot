@@ -23,5 +23,7 @@ namespace Aper_bot.Events
         Task Respond(string text);
 
         Task<DiscordMessage> Respond(DiscordEmbed text);
+        
+        Task<DiscordMessage> RespondBasic(string text);
     }
 }

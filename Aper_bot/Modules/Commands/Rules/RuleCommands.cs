@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Aper_bot.Database;
 using Aper_bot.Database.Model;
@@ -7,10 +8,8 @@ using Aper_bot.Modules.CommandProcessing;
 using Aper_bot.Modules.CommandProcessing.Attributes;
 using Aper_bot.Modules.Discord;
 using Aper_bot.Util;
-using Brigadier.NET;
-using Brigadier.NET.Builder;
-using Brigadier.NET.Context;
 using DSharpPlus.Entities;
+using Mars;
 using Microsoft.EntityFrameworkCore;
 
 namespace Aper_bot.Modules.Commands.Rules
@@ -25,8 +24,9 @@ namespace Aper_bot.Modules.Commands.Rules
             //dbFactory = fac;
         }
 
-        public override LiteralArgumentBuilder<CommandExecutionContext> Register(IArgumentContext<CommandExecutionContext> l)
+        public override IEnumerable<CommandNode> Register()
         {
+            /*
             return l.Literal("rule")
                 .Then(l => l.Argument("id", Arguments.Integer(min: 0))
                     .Executes(SingleRule)
@@ -56,8 +56,11 @@ namespace Aper_bot.Modules.Commands.Rules
                         .Executes(PlaceRules)
                     )
                 );
+                */
+            return null;
         }
 
+        /*
         private async Task RemoveRule(CommandContext<CommandExecutionContext> context, IMessageCreatedEvent discordMessageEvent)
         {
             var guild = discordMessageEvent.Guild;
@@ -252,5 +255,6 @@ namespace Aper_bot.Modules.Commands.Rules
         {
             source.RespondError("The server is not set up");
         }
+        */
     }
 }

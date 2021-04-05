@@ -8,7 +8,7 @@ using Microsoft.Extensions.Hosting;
 
 namespace Aper_bot.Modules.DiscordSlash
 {
-    [Module("Discord Slash")]
+    //[Module("Discord Slash")]
     public class DiscordSlashModule: IModule
     {
         

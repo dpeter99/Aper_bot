@@ -1,11 +1,10 @@
 ﻿using Aper_bot.Events;
-using Brigadier.NET;
 
 namespace Aper_bot.Modules.CommandProcessing.Commands
 {
-    public interface ICommandTree
+    public interface ICommandProcessor
     {
-        CommandDispatcher<CommandExecutionContext> dispatcher { get; }
+        Mars.CommandTree tree { get; }
 
         void ProcessMessage(IMessageCreatedEvent messageEvent);
 

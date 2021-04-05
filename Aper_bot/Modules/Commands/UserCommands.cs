@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Aper_bot.Database;
 using Aper_bot.Database.Model;
@@ -7,8 +8,7 @@ using Aper_bot.Modules.CommandProcessing;
 using Aper_bot.Modules.CommandProcessing.Attributes;
 using Aper_bot.Modules.CommandProcessing.DiscordArguments;
 using Aper_bot.Modules.Discord;
-using Brigadier.NET.Builder;
-using Brigadier.NET.Context;
+using Mars;
 using Microsoft.EntityFrameworkCore;
 
 namespace Aper_bot.Modules.Commands
@@ -26,8 +26,9 @@ namespace Aper_bot.Modules.Commands
             //dbContextFactory = fac;
         }
 
-        public override LiteralArgumentBuilder<CommandExecutionContext> Register(IArgumentContext<CommandExecutionContext> l)
+        public override IEnumerable<CommandNode> Register()
         {
+            /*
             return l.Literal("user")
                     .Then(
                         a =>
@@ -45,9 +46,12 @@ namespace Aper_bot.Modules.Commands
                         a.Argument("user", DiscordArgumentTypes.User())
                          .Executes(AsyncExecue(User))
                     );
+                    */
+            return null;
 
         }
 
+        /*
         public Task User(CommandContext<CommandExecutionContext> ctx, IMessageCreatedEvent messageEvent)
         {
             if (messageEvent is DiscordMessageCreatedEvent dmce)
@@ -96,5 +100,6 @@ namespace Aper_bot.Modules.Commands
 
             return 0;
         }
+        */
     }
 }

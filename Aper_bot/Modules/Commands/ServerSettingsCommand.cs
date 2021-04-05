@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Aper_bot.Database.Model;
@@ -8,11 +9,9 @@ using Aper_bot.Modules.CommandProcessing.Attributes;
 using Aper_bot.Modules.CommandProcessing.DiscordArguments;
 using Aper_bot.Modules.Discord;
 using Aper_bot.Modules.Discord.Config;
-using Brigadier.NET;
-using Brigadier.NET.Builder;
-using Brigadier.NET.Context;
 using DSharpPlus;
 using DSharpPlus.Entities;
+using Mars;
 using Microsoft.Extensions.Options;
 using Serilog;
 
@@ -32,8 +31,9 @@ namespace Aper_bot.Modules.Commands
             config = options;
         }
 
-        public override LiteralArgumentBuilder<CommandExecutionContext> Register(IArgumentContext<CommandExecutionContext> l)
+        public override IEnumerable<CommandNode> Register()
         {
+            /*
             return l.Literal("server")
                 .Then(s =>
                     s.Literal("setup")
@@ -56,8 +56,12 @@ namespace Aper_bot.Modules.Commands
                             )
                         )
                 );
+                */
+            return null;
         }
 
+        /*
+        
         [CommandPermissionRequired(PermissionLevels.Owner)]
         private async Task ServerSetup(CommandContext<CommandExecutionContext> ctx, IMessageCreatedEvent messageEvent)
         {
@@ -182,5 +186,6 @@ namespace Aper_bot.Modules.Commands
             }
         }
 
+        */
     }
 }

@@ -1,10 +1,10 @@
-﻿using System.Collections.Generic;
+﻿/*
+using System.Collections.Generic;
 using System.Linq;
 using Aper_bot.Modules.CommandProcessing;
 using Aper_bot.Modules.CommandProcessing.Commands;
 using Aper_bot.Modules.DiscordSlash.Entities;
 using Aper_bot.Util;
-using Brigadier.NET.Tree;
 using Microsoft.Extensions.Logging;
 
 namespace Aper_bot.Modules.DiscordSlash
@@ -25,7 +25,7 @@ namespace Aper_bot.Modules.DiscordSlash
             var commands = new List<SlashCommand>();
 
 
-            var dispatcher = CommandTree.dispatcher;
+            var dispatcher = CommandTree.tree;
 
             var root = dispatcher.GetRoot();
 
@@ -69,22 +69,22 @@ namespace Aper_bot.Modules.DiscordSlash
             //var command = new ApplicationCommand(name, 0, options.ToArray(), 0L);
 
 
-            /*
-            //Break if the top level command is used.... discord limit
-            if (cmdNode.Any(node => node is LiteralCommandNode<CommandArguments>) &&
-                cmdNode.Any(node => node is ArgumentCommandNode<CommandArguments>))
-            {
-                Logger.LogError("Stuff");
-                return null;
-            }
-
-            if (cmdNode.Command != null &&
-                cmdNode.Children.Count > 0)
-            {
-                Logger.LogError("Stuff");
-                return null;
-            }
-            */
+//             
+//             //Break if the top level command is used.... discord limit
+//             if (cmdNode.Any(node => node is LiteralCommandNode<CommandArguments>) &&
+//                 cmdNode.Any(node => node is ArgumentCommandNode<CommandArguments>))
+//             {
+//                 Logger.LogError("Stuff");
+//                 return null;
+//             }
+//
+//             if (cmdNode.Command != null &&
+//                 cmdNode.Children.Count > 0)
+//             {
+//                 Logger.LogError("Stuff");
+//                 return null;
+//             }
+//             
 
             command.Options = options.ToArray();
 
@@ -159,3 +159,5 @@ namespace Aper_bot.Modules.DiscordSlash
         }
     }
 }
+
+*/

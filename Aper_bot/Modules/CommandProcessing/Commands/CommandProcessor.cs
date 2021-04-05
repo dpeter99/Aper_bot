@@ -6,9 +6,8 @@ using Aper_bot.Database;
 using Aper_bot.EventBus;
 using Aper_bot.Events;
 using Aper_bot.Util.Singleton;
-using Brigadier.NET;
-using Brigadier.NET.Exceptions;
 using Extensions.Hosting.AsyncInitialization;
+using Mars;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -19,22 +18,21 @@ namespace Aper_bot.Modules.CommandProcessing.Commands
     /// <summary>
     /// This class is going to handle the incoming commands and than forward them to the right place
     /// </summary>
-    public class CommandTree : Singleton<CommandTree>, ICommandTree, IAsyncInitializer
+    public class CommandProcessor : Singleton<CommandProcessor>, ICommandProcessor, IAsyncInitializer
     {
-        public CommandDispatcher<CommandExecutionContext> dispatcher { get; private set; } = new CommandDispatcher<CommandExecutionContext>();
-
-        //List<ChatCommands> Commands = new List<ChatCommands>();
-
+        
+        public Mars.CommandTree tree { get; private set; } = new Mars.CommandTree();
+        
         IEventBus eventBus;
         private readonly IServiceProvider _provider;
-        ILogger<CommandTree> _logger;
+        ILogger<CommandProcessor> _logger;
 
         IDbContextFactory<CoreDatabaseContext> dbContextFactory;
 
         private readonly IEnumerable<ChatCommands> _commands;
         private readonly IOptions<CommandBaseConfig> _config;
 
-        public CommandTree(IEventBus bus, IServiceProvider provider, ILogger<CommandTree> log, IDbContextFactory<CoreDatabaseContext> fac, IEnumerable<ChatCommands> commands,
+        public CommandProcessor(IEventBus bus, IServiceProvider provider, ILogger<CommandProcessor> log, IDbContextFactory<CoreDatabaseContext> fac, IEnumerable<ChatCommands> commands,
             IOptions<CommandBaseConfig> config)
         {
             eventBus = bus;
@@ -53,7 +51,14 @@ namespace Aper_bot.Modules.CommandProcessing.Commands
 
             foreach (var command in _commands)
             {
-                dispatcher.Register(command.Register);
+                var cmds = command.Register();
+                if (cmds is not null)
+                {
+                    foreach (var cmd in cmds)
+                    {
+                        tree.AddNode(cmd);
+                    }
+                }
             }
 
             _logger.LogInformation(
@@ -69,6 +74,8 @@ namespace Aper_bot.Modules.CommandProcessing.Commands
             throw new NotImplementedException();
         }
 
+        
+
         public void ProcessMessage(IMessageCreatedEvent messageEvent)
         {
             if (messageEvent.Message.Length == 0 || !messageEvent.Message.StartsWith(_config.Value.prefix))
@@ -78,35 +85,31 @@ namespace Aper_bot.Modules.CommandProcessing.Commands
 
             var commandText = messageEvent.Message.Remove(0, _config.Value.prefix.Length);
 
+            
+            var res = tree.ParseString(commandText);
 
-            var context = new CommandExecutionContext(messageEvent);
-
-            var res = dispatcher.Parse(commandText, context);
-            try
+            if (res.error is not null)
             {
-                if (res.Exceptions.Count == 0 && res.Context.Command != null)
-                {
-                    dispatcher.Execute(res);
+                 var usages = res.Nodes.Last().GetUsages(res);
+                 string text = "Usage";
+                 foreach (var item in usages)
+                 {
+                     text += $"\n {item}";
+                 }
 
-                    ExecuteCommand(context);
-                }
-                else
-                {
-                    CommandSyntaxException exc = res.Exceptions.FirstOrDefault().Value;
-
-                    CommandError(exc, res, messageEvent);
-                }
+                 messageEvent.RespondError(text);
             }
-            catch (Exception e)
+            if (res.Callback is not null)
             {
-                _logger.LogError(e, $"Error in parsing command: {messageEvent.Message}");
-                if (e is CommandSyntaxException error)
+                //messageEvent.Respond("WELL well");
+                if (res.Callback is CommandFunction func)
                 {
-                    CommandError(error, res, messageEvent);
+                    func.Cmd(res, messageEvent);
                 }
-            }
+            } 
+            
         }
-
+/*
         public async void ExecuteCommand(CommandExecutionContext context)
         {
             //We didn't get a command to run 
@@ -139,7 +142,7 @@ namespace Aper_bot.Modules.CommandProcessing.Commands
             }
         }
 
-        private void CommandError(CommandSyntaxException exc, ParseResults<CommandExecutionContext>? parse, IMessageCreatedEvent discordMessage)
+        private void CommandError(CommandSyntaxException exc, ParseResult parse, IMessageCreatedEvent discordMessage)
         {
             string text = exc?.InnerException?.Message ?? exc?.Message ?? "";
 
@@ -176,5 +179,7 @@ namespace Aper_bot.Modules.CommandProcessing.Commands
 
             discordMessage.RespondError(text);
         }
+        */
     }
+
 }
