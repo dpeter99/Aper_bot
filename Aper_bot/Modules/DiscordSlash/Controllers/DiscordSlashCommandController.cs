@@ -15,9 +15,9 @@ namespace Aper_bot.Modules.DiscordSlash.Controllers
     public class DiscordSlashCommandController : ControllerBase
     {
         private readonly ILogger _logger;
-        private readonly SlashCommandHandler _slashModule;
+        private readonly SlashCommandExecutor _slashModule;
 
-        public DiscordSlashCommandController(ILogger<DiscordSlashCommandController> logger, SlashCommandHandler slashModule)
+        public DiscordSlashCommandController(ILogger<DiscordSlashCommandController> logger, SlashCommandExecutor slashModule)
         {
             _logger = logger;
             _slashModule = slashModule;

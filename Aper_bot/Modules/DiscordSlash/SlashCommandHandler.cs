@@ -15,6 +15,7 @@ using Aper_bot.Modules.Discord;
 using Aper_bot.Modules.Discord.Config;
 using Aper_bot.Modules.DiscordSlash.Database;
 using Aper_bot.Modules.DiscordSlash.Database.Model;
+using Aper_bot.Modules.DiscordSlash.Entities;
 using Aper_bot.Util;
 using Aper_bot.Util.Discord;
 using DSharpPlus.SlashCommands.Entities;
@@ -83,10 +84,6 @@ namespace Aper_bot.Modules.DiscordSlash
         public async Task InitializeAsync()
         {
             await LoadCommandTree();
-
-            //var cmds = _commandSuplier.GetCommands();
-
-            //await UpdateOrAddCommands(cmds);
         }
 
         private async Task LoadCommandTree()
@@ -114,8 +111,6 @@ namespace Aper_bot.Modules.DiscordSlash
             // ... build our update and delete lists ...
             List<SlashCommand> toUpdate = new();
             List<SlashCommand> toRemove = new();
-
-            
             
             foreach (var cmd in discordCmds)
             {
@@ -299,13 +294,10 @@ namespace Aper_bot.Modules.DiscordSlash
             }
         }
 
-        public async Task<object?> HandleWebhookPost(string raw)
+
+        public void RunCommand()
         {
-            var i = JsonConvert.DeserializeObject<Interaction>(raw);
-
-            _commands[i.Data.Id].Execute(i.Data);
-
-            return null;
+            
         }
     }
 
@@ -333,8 +325,6 @@ namespace Aper_bot.Modules.DiscordSlash
                 ParseOptions(interactionData.Options, _applicationCommand.Options, arguments);
             }
             
-            
-            
         }
 
         private void ParseOptions(ApplicationCommandInteractionDataOption[] data, ApplicationCommandOption[] option, CommandArguments commandArguments)
@@ -350,8 +340,6 @@ namespace Aper_bot.Modules.DiscordSlash
                         ParseOptions(dataOption.Options,commandOption.Options,commandArguments);
                     }
                     
-                    
-
                     if (dataOption.Value is not null)
                     {
                         commandArguments.args.Add(dataOption.Name,dataOption.Value.ToString());

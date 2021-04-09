@@ -15,6 +15,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Aper_bot.Hosting.Database;
+using Aper_bot.Util.Discord;
 
 namespace Aper_bot.Database
 {
@@ -31,39 +32,10 @@ namespace Aper_bot.Database
 
         public CoreDatabaseContext(IOptions<DatabaseSettings> options):base(Schema, options)
         {
-            //settings = options;
-            //Database.Migrate();
-        }
-        
-        
-/*
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            
 
-            var connectionString = $"server={settings.Value.Address};port=3306;user={settings.Value.User};password={settings.Value.Password};database={settings.Value.Database_Name}";
-
-            optionsBuilder.UseMySql(
-                    connectionString,
-                    MariaDbServerVersion.FromString("10.4.12-MariaDB-1:10.4.12+maria~bionic"),
-                    MysqlOptions)
-                .EnableSensitiveDataLogging()
-                .EnableDetailedErrors();
         }
 
-        void MysqlOptions(MySqlDbContextOptionsBuilder options)
-        {
-            options.CharSetBehavior(CharSetBehavior.NeverAppend);
-            options.SchemaBehavior(MySqlSchemaBehavior.Translate, Translator);
-        }
 
-        private string Translator(string schemaname, string objectname)
-        {
-            return $"{schemaname}.{objectname}";
-        }
-*/
-        
-        
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder
@@ -77,8 +49,9 @@ namespace Aper_bot.Database
 
         }
 
-
-
+        
+        
+        
         public User GetOrCreateUserFor(DiscordUser discordUser)
         {
             var user = (from u in Users
@@ -102,6 +75,16 @@ namespace Aper_bot.Database
                         where u.GuildID == discordGuild.Id.ToString()
                         select u)
                            .FirstOrDefault();
+
+            return guild;
+        }
+        
+        public Guild? GetGuildFor(Snowflake discordGuildId)
+        {
+            var guild = (from u in Guilds
+                    where u.GuildID == discordGuildId.ToString()
+                    select u)
+                .FirstOrDefault();
 
             return guild;
         }

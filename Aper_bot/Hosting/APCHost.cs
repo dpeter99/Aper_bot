@@ -163,7 +163,9 @@ namespace Aper_bot.Hosting
 
             services.AddAsyncInitializer<DatabaseMigrator>();
             
-            services.AddSingleton<IDbContextFactory<CoreDatabaseContext>, DatabaseContextProvider>();
+            //services.AddSingleton<IDbContextFactory<CoreDatabaseContext>, DatabaseContextProvider>();
+            //services.AddSingleton<DatabaseContextProvider>();
+            services.AddDbContextFactory<CoreDatabaseContext,DatabaseContextProvider>(lifetime: ServiceLifetime.Singleton);
             services.AddTransient<IMigrationContext,MigrationContext<CoreDatabaseContext>>();
 
             services.AddHttpClient();

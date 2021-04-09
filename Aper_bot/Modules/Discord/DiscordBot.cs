@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Aper_bot.CommandExecutor;
 using Aper_bot.Database;
 using Aper_bot.EventBus;
 using Aper_bot.Events;

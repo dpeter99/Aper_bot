@@ -39,6 +39,7 @@ namespace Aper_bot.Modules.Commands
         {
             var quote = new LiteralNode("quote");
 
+            //#### ADD ######
             var add = quote.NextLiteral("add");
             add.NextLiteral("anonymous")
                 .NextArgument("text",new LongStringArgument())
@@ -49,15 +50,20 @@ namespace Aper_bot.Modules.Commands
                 .NextArgument("text",new LongStringArgument())
                 .ThisCalls(new CommandFunction(AddQuote));
 
-            
-            var list = quote.NextLiteral("list");
+            //#### LIST ######
+            var list = quote.NextLiteral("get");
 
             list.NextLiteral("all").ThisCalls(new CommandFunction(ListQuotes));
 
+            
+            //#### Specific number ######
+            list.NextLiteral("num").NextArgument("number", new IntArgument()).ThisCalls(new CommandFunction(PrintQuote));
+            
+            //#### REMOVE ######
             var remove = quote.NextLiteral("remove");
             remove.NextArgument("id", new IntArgument()).ThisCalls(new CommandFunction(RemoveQuote));
 
-            quote.NextArgument("number", new IntArgument()).ThisCalls(new CommandFunction(PrintQuote));
+            
             
             return new[] {quote};
             
@@ -128,10 +134,11 @@ namespace Aper_bot.Modules.Commands
                     embed.Author = new DiscordEmbedBuilder.EmbedAuthor();
                     if (quote.Source != null)
                     {
-                        var source_user =
-                            await DiscordBot.Instance.Client.GetUserAsync(ulong.Parse(quote.Source.UserID));
-                        embed.Author.IconUrl = source_user.AvatarUrl;
-                        embed.Author.Name = quote.SourceName;
+                        var discordGuild = await DiscordBot.Instance.Client.GetGuildAsync(ulong.Parse(guild.GuildID));
+                        var sourceMember = await discordGuild.GetMemberAsync(ulong.Parse(quote.Source.UserID));
+                            
+                        embed.Author.IconUrl = sourceMember.AvatarUrl;
+                        embed.Author.Name = sourceMember.Nickname;
                     }
 
                     embed.Footer = new DiscordEmbedBuilder.EmbedFooter()
@@ -156,11 +163,19 @@ namespace Aper_bot.Modules.Commands
             {
                 await db.Entry(guild).Collection(g => g!.Quotes).LoadAsync();
                 
+                var discordGuild = await DiscordBot.Instance.Client.GetGuildAsync(ulong.Parse(guild.GuildID));
+                
                 string text = "";
                 foreach (var item in guild.Quotes)
                 {
                     await db.Entry(item).Reference(r => r.Source).LoadAsync();
-                    text += $"\n{EmojiHelper.Number(item.number)} *{item.Text}* - by {item.SourceName}";
+
+                    if (item.Source != null)
+                    {
+                        var sourceMember = await discordGuild.GetMemberAsync(ulong.Parse(item.Source.UserID));
+                    
+                        text += $"\n{EmojiHelper.Number(item.number)} *{item.Text}* - by {sourceMember.Nickname}";
+                    }
                 }
 
                 var embed = DiscordBot.Instance.BaseEmbed();

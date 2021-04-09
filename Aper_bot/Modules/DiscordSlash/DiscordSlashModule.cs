@@ -8,15 +8,18 @@ using Microsoft.Extensions.Hosting;
 
 namespace Aper_bot.Modules.DiscordSlash
 {
-    //[Module("Discord Slash")]
+    [Module("Discord Slash")]
     public class DiscordSlashModule: IModule
     {
         
         public void RegisterServices(HostBuilderContext ctx,IServiceCollection services)
         {
             services.AddSingleton<SlashCommandHandler>();
+            services.AddSingleton<SlashCommandExecutor>();
             services.AddSingleton<IHostedService>(
                 serviceProvider => serviceProvider.GetService<SlashCommandHandler>()!);
+            
+            services.AddSingleton<ISlashCommandSuplier,MarsCommandSuplier>();
             
             //services.AddSingleton<IHostedService, SlashCommandHandler>(
             //    serviceProvider => ((SlashCommandHandler) serviceProvider.GetService<SlashCommandHandler>())!);

@@ -4,7 +4,7 @@ using System;
 
 namespace Aper_bot.Events
 {
-    public class CommandSourceStack<T> : Event where T : EventArgs
+    public class CommandSourceStack<T> : Event
     {
         public T @event;
 

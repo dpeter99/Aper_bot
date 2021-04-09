@@ -1,10 +1,9 @@
-﻿
-using DSharpPlus.Entities;
+﻿using DSharpPlus.Entities;
+using DSharpPlus.SlashCommands.Entities;
 using DSharpPlus.SlashCommands.Enums;
-
 using Newtonsoft.Json;
 
-namespace DSharpPlus.SlashCommands.Entities
+namespace Aper_bot.Modules.DiscordSlash.Entities
 {
     public class Interaction
     {

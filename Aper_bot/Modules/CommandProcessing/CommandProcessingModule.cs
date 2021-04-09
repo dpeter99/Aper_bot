@@ -21,7 +21,7 @@ namespace Aper_bot.Modules.CommandProcessing
             services.AddSingleton<IAsyncInitializer>(
                 serviceProvider => ((CommandProcessor) serviceProvider.GetService<ICommandProcessor>())!);
             
-            //services.AddSingleton<ISlashCommandSuplier,BrigadierSlashCommandSuplier>();
+            
             
             var commands = Assembly.GetExecutingAssembly().DefinedTypes.Where(e => e.CustomAttributes.Any(a => a.AttributeType == typeof(CommandProviderAttribute)));
             foreach (var item in commands)

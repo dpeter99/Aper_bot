@@ -54,7 +54,6 @@
     <Folder Include="Database\Migrations" />
     <Folder Include="Database\Migrations\" />
     <Folder Include="Hosting\WebHost\Controllers" />
-    <Folder Include="Modules\DiscordSlash\Builders" />
     <Folder Include="Modules\DiscordSlash\Database\Migrations" />
   </ItemGroup>
 
