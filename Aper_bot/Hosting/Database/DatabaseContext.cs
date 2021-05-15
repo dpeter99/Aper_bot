@@ -23,7 +23,7 @@ namespace Aper_bot.Hosting.Database
 
             optionsBuilder.UseMySql(
                     connectionString,
-                    MariaDbServerVersion.FromString("10.4.12-MariaDB-1:10.4.12+maria~bionic"),
+                    MariaDbServerVersion.Parse("10.4.12-MariaDB-1:10.4.12+maria~bionic"),
                     MysqlOptions)
                 .EnableSensitiveDataLogging()
                 .EnableDetailedErrors();
@@ -31,7 +31,7 @@ namespace Aper_bot.Hosting.Database
         
         void MysqlOptions(MySqlDbContextOptionsBuilder options)
         {
-            options.CharSetBehavior(CharSetBehavior.NeverAppend);
+            //options.CharSetBehavior(CharSetBehavior.NeverAppend);
             options.SchemaBehavior(MySqlSchemaBehavior.Translate, Translator);
             options.MigrationsHistoryTable(Translator(_schema, HistoryRepository.DefaultTableName));
         }

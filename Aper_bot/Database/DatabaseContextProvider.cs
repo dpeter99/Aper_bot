@@ -7,9 +7,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
+/*
 namespace Aper_bot.Database
 {
+    [Obsolete]
     class DatabaseContextProvider: IDbContextFactory<CoreDatabaseContext>
     {
         private IServiceProvider _serviceProvider;
@@ -27,7 +28,7 @@ namespace Aper_bot.Database
             //Console.WriteLine($"THIS IS : {environment.EnvironmentName} NOT PATRIC");
             if(environment.EnvironmentName != "Design")
             {
-                jellyfinDb.Database.Migrate();
+                //jellyfinDb.Database.Migrate();
             }
             
         }
@@ -38,3 +39,4 @@ namespace Aper_bot.Database
         }
     }
 }
+*/

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
+using Aper_bot.Modules.DiscordSlash.Entities;
 using DSharpPlus.Entities;
 
 namespace DSharpPlus.SlashCommands.Entities.Builders

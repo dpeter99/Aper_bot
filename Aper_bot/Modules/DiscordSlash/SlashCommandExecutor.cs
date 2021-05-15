@@ -1,5 +1,7 @@
-﻿using System.Diagnostics;
+﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Aper_bot.Database;
 using Aper_bot.Modules.CommandProcessing;
@@ -78,7 +80,8 @@ namespace Aper_bot.Modules.DiscordSlash
             {
                 if (child.Name == data.Name)
                 {
-                    ParseOptions(child, data.Options, parseResult);
+                    //ParseOptions(child, data.Options, parseResult);
+                    ParseNew(child,data.Options,parseResult);
                 }
             }
         }
@@ -147,14 +150,49 @@ namespace Aper_bot.Modules.DiscordSlash
             }
         }
 
-        public static void ParseNew(CommandNode node, ApplicationCommandInteractionDataOption[] data, ParseResult parseResult)
+        public static void ParseNew(CommandNode node, ApplicationCommandInteractionDataOption[]? data, ParseResult parseResult)
         {
-            
-            //We are the node
+            //We are the node from Mars
             //We were called because we can parse the token
             
-            var flatChildren = node.GetChildNodes().Map(n => n.GetChildNodes()).ToList();
             
+            //if we are an end node we set the execution data
+            if (node.EndNode)
+            {
+                parseResult.Callback = node.Callback;
+            }
+            
+            var flatChildren = node.Children.Map(n => n.Children).ToList();
+
+            IEnumerable<CommandNode> nodes;
+            //All the children are argument nodes so we need to parse them flat
+            nodes = flatChildren.All(i => i is IArgumentNode) ? flatChildren : node.Children;
+
+            if(data is null)
+                return;
+            
+            foreach (var option in data)
+            {
+                foreach (var child in nodes)
+                {
+                    //If we match the name
+                    if (option.Name == child.Name)
+                    {
+                        var content = option.Value?.ToString() ?? option.Name;
+                        if (child.CanParse(content))
+                        {
+                            child.ParseSingleToken(content, parseResult);
+                            if (option.Options is not null)
+                            {
+                                ParseNew(child, option.Options, parseResult);
+                            }
+                        }
+                    }
+                }
+            }
+            
+
+
         }
     }
 

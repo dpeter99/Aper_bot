@@ -3,9 +3,9 @@ using System.Threading.Tasks;
 using Aper_bot.Database;
 using Aper_bot.Database.Model;
 using Aper_bot.Events;
+using Aper_bot.Modules.DiscordSlash.Entities;
 using DSharpPlus.Entities;
-using DSharpPlus.SlashCommands.Entities;
-using DSharpPlus.SlashCommands.Enums;
+
 
 namespace Aper_bot.Modules.DiscordSlash
 {
@@ -42,6 +42,7 @@ namespace Aper_bot.Modules.DiscordSlash
             builder.Color = new Optional<DiscordColor>(new DiscordColor(255, 0, 0));
             
             Embed = builder.Build();
+            //Text = text;
             return Task.CompletedTask;
         }
 
@@ -74,7 +75,9 @@ namespace Aper_bot.Modules.DiscordSlash
         {
             var inter = new InteractionResponse();
             inter.Data = new InteractionApplicationCommandCallbackData();
-
+            inter.Data.TextToSpeech = false;
+            inter.Data.Flags = 64;
+            
             if (Embed is not null)
             {
                 inter.Type = InteractionResponseType.ChannelMessageWithSource;

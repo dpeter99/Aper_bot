@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using DSharpPlus.SlashCommands.Entities.Builders;
 
-using DSharpPlus.SlashCommands.Enums;
-
-namespace DSharpPlus.SlashCommands.Entities.Builders
+namespace Aper_bot.Modules.DiscordSlash.Entities.Builders
 {
     public class InteractionResponseBuilder : IBuilder<InteractionResponse>
     {

@@ -11,6 +11,7 @@ using Aper_bot.Util;
 using Aper_bot.Util.Singleton;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -76,13 +77,25 @@ namespace Aper_bot.Hosting
 
             if (_modules.Any(m => m.Value.IsAspRequiered()))
                 builder.ConfigureWebHost(WebHostConfig);
+
             
-            builder.ConfigureLogging((c, l) =>
+             
+            
+            builder.ConfigureLogging((context, l) =>
             {
                 l.ClearProviders();
+                
+                Log.Logger = new LoggerConfiguration()
+                    .ReadFrom.Configuration(context.Configuration)
+                    .Enrich.FromLogContext()
+                    .WriteTo.Console(
+                        outputTemplate:"[{Timestamp:HH:mm:ss} {SourceContext} {Level:u3}] {Message:lj}{NewLine}{Exception}"
+                    )
+                    .CreateLogger();
+                
                 l.AddSerilog();
             });
-            
+
             builder.ConfigureServices(RegisterServices);
 
             _host = builder.Build();
@@ -165,7 +178,8 @@ namespace Aper_bot.Hosting
             
             //services.AddSingleton<IDbContextFactory<CoreDatabaseContext>, DatabaseContextProvider>();
             //services.AddSingleton<DatabaseContextProvider>();
-            services.AddDbContextFactory<CoreDatabaseContext,DatabaseContextProvider>(lifetime: ServiceLifetime.Singleton);
+            //services.AddDbContextFactory<CoreDatabaseContext,DatabaseContextProvider>(lifetime: ServiceLifetime.Singleton);
+            services.AddDbContextFactory<CoreDatabaseContext>();
             services.AddTransient<IMigrationContext,MigrationContext<CoreDatabaseContext>>();
 
             services.AddHttpClient();

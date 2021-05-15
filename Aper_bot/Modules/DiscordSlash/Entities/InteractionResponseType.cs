@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace DSharpPlus.SlashCommands.Enums
+namespace Aper_bot.Modules.DiscordSlash.Entities
 {
     public enum InteractionResponseType
     {

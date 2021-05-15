@@ -1,16 +1,16 @@
 ﻿using System;
-
-using DSharpPlus.SlashCommands.Enums;
-
+using DSharpPlus.SlashCommands.Entities;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using InteractionResponseType = DSharpPlus.InteractionResponseType;
 
-namespace DSharpPlus.SlashCommands.Entities
+namespace Aper_bot.Modules.DiscordSlash.Entities
 {
     public class InteractionResponse
     {
         [JsonProperty("type")]
         public InteractionResponseType Type { get; internal set; }
+        
         [JsonProperty("data")]
         public InteractionApplicationCommandCallbackData? Data { get; internal set; }
 

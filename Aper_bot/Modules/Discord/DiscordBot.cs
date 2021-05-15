@@ -121,7 +121,7 @@ namespace Aper_bot.Modules.Discord
             return new DiscordEmbedBuilder()
             {
                 Author = new DiscordEmbedBuilder.EmbedAuthor() {Name = "Aper_bot"},
-                Timestamp = DateTimeOffset.Now
+                Timestamp = DateTimeOffset.Now,
             };
         }
     }

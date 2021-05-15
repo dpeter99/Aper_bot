@@ -1,6 +1,10 @@
-﻿using System.IO;
+﻿using System;
+using System.Buffers;
+using System.IO;
 using System.Threading.Tasks;
 using Aper_bot.Modules.Discord;
+using Aper_bot.Modules.DiscordSlash.Entities;
+using Aper_bot.Modules.DiscordSlash.Entities.Builders;
 using DSharpPlus.SlashCommands.Entities.Builders;
 using DSharpPlus.SlashCommands.Enums;
 using Microsoft.AspNetCore.Mvc;
@@ -61,9 +65,28 @@ namespace Aper_bot.Modules.DiscordSlash.Controllers
             {// ... then pass the raw request body to the client ...
                 
                 var response = await _slashModule.HandleWebhookPost(raw);
-                if (response is not null) // ... if the clients response is not null ...
-                    return Ok(JsonConvert.SerializeObject(response)); // ... serialize it and send it.
-                
+                if (response is not null)
+                {
+                    var j = JsonConvert.SerializeObject(response);
+
+                    _logger.LogInformation(j);
+                    Console.WriteLine(j);
+
+                    //Response.ContentType = "application/json";
+                    //Response.StatusCode = 200;
+                    //return Ok(j);
+
+                    var r = new JsonResult(response);
+                    r.ContentType = "application/json";
+                    r.StatusCode = 200;
+                    
+                    //_logger.LogInformation(r.Value.ToString());
+                    
+                    return r;
+                    
+                    
+                }
+
                 else return BadRequest("Failed to parse request JSON."); // ... or send a bad request message.
                 
             }
