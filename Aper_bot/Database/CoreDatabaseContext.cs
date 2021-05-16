@@ -30,7 +30,7 @@ namespace Aper_bot.Database
         public DbSet<Quote> Quotes => Set<Quote>();
         
 
-        public CoreDatabaseContext(IOptions<DatabaseSettings> options):base(Schema, options)
+        public CoreDatabaseContext(DbContextOptions<CoreDatabaseContext> options):base(Schema, options)
         {
 
         }

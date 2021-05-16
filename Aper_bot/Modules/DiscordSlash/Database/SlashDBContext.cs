@@ -16,11 +16,11 @@ namespace Aper_bot.Modules.DiscordSlash.Database
     {
         public DbSet<Model.Command> Commands => Set<Model.Command>();
         
-        IOptions<DatabaseSettings> settings;
+        //IOptions<DatabaseSettings> settings;
 
-        public SlashDbContext(IOptions<DatabaseSettings> options) : base("SlashCommands", options)
+        public SlashDbContext(DbContextOptions<SlashDbContext> options) : base("SlashCommands", options)
         {
-            settings = options;
+            //settings = options;
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

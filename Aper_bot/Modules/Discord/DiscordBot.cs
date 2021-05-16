@@ -123,8 +123,6 @@ namespace Aper_bot.Modules.Discord
                 _commandProcessor.ProcessMessage(new_event);
             }
             
-
-
             return Task.CompletedTask;
         }
 
