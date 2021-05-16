@@ -18,7 +18,7 @@ namespace Aper_bot.Modules.DiscordSlash.Database
         
         //IOptions<DatabaseSettings> settings;
 
-        public SlashDbContext(DbContextOptions<SlashDbContext> options) : base("SlashCommands", options)
+        public SlashDbContext(IOptions<DatabaseSettings> options) : base("SlashCommands", options)
         {
             //settings = options;
         }

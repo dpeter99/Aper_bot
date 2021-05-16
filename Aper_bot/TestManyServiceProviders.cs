@@ -1,7 +1,9 @@
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Aper_bot.Database;
+using Aper_bot.Hosting;
 using Aper_bot.Modules.Discord;
 using DSharpPlus.EventArgs;
 using Microsoft.Extensions.DependencyInjection;
@@ -34,9 +36,14 @@ namespace Aper_bot
                 
                 using (var scope = Services.CreateScope())
                 {
-                    var dbContext = scope.ServiceProvider.GetRequiredService<CoreDatabaseContext>();
+                    var dbContext = scope.ServiceProvider.GetService<CoreDatabaseContext>();
 
-                    dbContext.GetGuildFor("611652646721421463");
+                    //dbContext.GetGuildFor("611652646721421463");
+                    
+                    var guild = (from u in dbContext.Guilds
+                            where u.GuildID == "611652646721421463"
+                            select u)
+                        .FirstOrDefault();
 
                     //var new_event = new DiscordMessageCreatedEvent(,dbContext);
 

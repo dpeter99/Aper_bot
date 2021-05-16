@@ -168,8 +168,8 @@ namespace Aper_bot.Hosting
             //services.AddSingleton(Log.Logger);
             //services.AddSingleton<IEventBus>(new EventBus.EventBus());
             
-            //services.Configure<Config>(ctx.Configuration.GetSection("Config"));
-            //services.Configure<DatabaseSettings>(ctx.Configuration.GetSection("Database"));
+            services.Configure<Config>(ctx.Configuration.GetSection("Config"));
+            services.Configure<DatabaseSettings>(ctx.Configuration.GetSection("Database"));
             
             //services.Configure<HostingConfig>(ctx.Configuration.GetSection("Hosting"));
             //services.Configure<CertConfig>(ctx.Configuration.GetSection("Hosting:CertConfig"));

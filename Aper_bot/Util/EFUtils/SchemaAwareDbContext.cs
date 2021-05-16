@@ -6,7 +6,7 @@ namespace Aper_bot.Util
     {
         protected readonly string _schema;
 
-        protected SchemaAwareDbContext(string schema, DbContextOptions dbContextOptions) : base(dbContextOptions)
+        protected SchemaAwareDbContext(string schema) : base()
         {
             _schema = schema;
         }

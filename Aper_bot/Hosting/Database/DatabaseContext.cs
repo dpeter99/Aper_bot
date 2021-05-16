@@ -10,11 +10,11 @@ namespace Aper_bot.Hosting.Database
 {
     public class DatabaseContext : SchemaAwareDbContext
     {
-        //private readonly IOptions<DatabaseSettings> _options;
+        private readonly IOptions<DatabaseSettings> _options;
 
-        public DatabaseContext(string schema, DbContextOptions options) : base(schema, options)
+        public DatabaseContext(string schema, IOptions<DatabaseSettings> options) : base(schema)
         {
-            //_options = options;
+            _options = options;
             
         }
         
@@ -23,8 +23,8 @@ namespace Aper_bot.Hosting.Database
             if (!optionsBuilder.IsConfigured)
             {
                 var connectionString =
-                    //    $"server={_options.Value.Address};port=3306;user={_options.Value.User};password={_options.Value.Password};database={_options.Value.Database_Name}";
-                    @"THE CONNECTION STRING";
+                    $"server={_options.Value.Address};port=3306;user={_options.Value.User};password={_options.Value.Password};database={_options.Value.Database_Name}";
+                    
 
                 optionsBuilder.UseMySql(
                     connectionString,
@@ -44,7 +44,7 @@ namespace Aper_bot.Hosting.Database
             options.MigrationsHistoryTable(Translator(_schema, HistoryRepository.DefaultTableName));
         }
 
-        private string Translator(string schemaname, string objectname)
+        private static string Translator(string schemaname, string objectname)
         {
             return $"{schemaname}.{objectname}";
         }

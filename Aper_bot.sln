@@ -12,8 +12,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DSharpPlus.SlashCommands", "DSharpPlus.SlashCommands\DSharpPlus.SlashCommands\DSharpPlus.SlashCommands.csproj", "{61BE40EF-69E5-47F0-BE71-4212674DE296}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Planning", "Planning\Planning.csproj", "{D68F7850-F872-4409-AE67-0EF077DB9E08}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mars", "..\..\..\Mars\Mars\Mars\Mars.csproj", "{9A623087-82FA-4F8D-8401-9FBDCE563907}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aper_bot.Test", "Aper_bot.Test\Aper_bot.Test.csproj", "{3668BEF5-7A05-44FC-9FD2-B2490FD3A091}"
@@ -32,10 +30,6 @@ Global
 		{61BE40EF-69E5-47F0-BE71-4212674DE296}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{61BE40EF-69E5-47F0-BE71-4212674DE296}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{61BE40EF-69E5-47F0-BE71-4212674DE296}.Release|Any CPU.Build.0 = Release|Any CPU
-		{D68F7850-F872-4409-AE67-0EF077DB9E08}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D68F7850-F872-4409-AE67-0EF077DB9E08}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D68F7850-F872-4409-AE67-0EF077DB9E08}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D68F7850-F872-4409-AE67-0EF077DB9E08}.Release|Any CPU.Build.0 = Release|Any CPU
 		{9A623087-82FA-4F8D-8401-9FBDCE563907}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{9A623087-82FA-4F8D-8401-9FBDCE563907}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9A623087-82FA-4F8D-8401-9FBDCE563907}.Release|Any CPU.ActiveCfg = Release|Any CPU

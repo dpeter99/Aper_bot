@@ -21,16 +21,16 @@ namespace Aper_bot.Database
 {
     public class CoreDatabaseContext : DatabaseContext
     {
-        public const string Schema = "Aper_Bot"; 
+        public const string Schema = "Aper_Bot";
+
+        public DbSet<User> Users { get; set; } // => Set<User>();
+
+        public DbSet<Guild> Guilds { get; set; }// => Set<Guild>();
+
+        public DbSet<Quote> Quotes { get; set; }// => Set<Quote>();
         
-        public DbSet<User> Users => Set<User>();
 
-        public DbSet<Guild> Guilds => Set<Guild>();
-
-        public DbSet<Quote> Quotes => Set<Quote>();
-        
-
-        public CoreDatabaseContext(DbContextOptions<CoreDatabaseContext> options):base(Schema, options)
+        public CoreDatabaseContext(IOptions<DatabaseSettings> options):base(Schema, options)
         {
 
         }
@@ -49,9 +49,6 @@ namespace Aper_bot.Database
 
         }
 
-        
-        
-        
         public User GetOrCreateUserFor(DiscordUser discordUser)
         {
             var user = (from u in Users
