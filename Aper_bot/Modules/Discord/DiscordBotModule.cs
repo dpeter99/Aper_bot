@@ -6,7 +6,7 @@ using Microsoft.Extensions.Hosting;
 
 namespace Aper_bot.Modules.Discord
 {
-    //[Module(name:"DiscordBot")]
+    [Module(name:"DiscordBot")]
     public class DiscordBotModule: IModule
     {
         public void RegisterServices(HostBuilderContext ctx,IServiceCollection services)

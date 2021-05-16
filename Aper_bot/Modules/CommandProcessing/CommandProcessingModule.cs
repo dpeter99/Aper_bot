@@ -10,7 +10,7 @@ using Microsoft.Extensions.Hosting;
 
 namespace Aper_bot.Modules.CommandProcessing
 {
-    //[Module("CommandProcessing")]
+    [Module("CommandProcessing")]
     public class CommandProcessingModule : IModule
     {
         public void RegisterServices(HostBuilderContext ctx,IServiceCollection services)

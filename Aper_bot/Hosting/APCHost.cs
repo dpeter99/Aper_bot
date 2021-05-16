@@ -163,32 +163,30 @@ namespace Aper_bot.Hosting
 
         private void RegisterDefaultServices(HostBuilderContext ctx, IServiceCollection services)
         {
-            //services.AddAsyncInitialization();
+            services.AddAsyncInitialization();
             
-            //services.AddSingleton(Log.Logger);
-            //services.AddSingleton<IEventBus>(new EventBus.EventBus());
+            services.AddSingleton(Log.Logger);
+            services.AddSingleton<IEventBus>(new EventBus.EventBus());
             
             services.Configure<Config>(ctx.Configuration.GetSection("Config"));
             services.Configure<DatabaseSettings>(ctx.Configuration.GetSection("Database"));
             
-            //services.Configure<HostingConfig>(ctx.Configuration.GetSection("Hosting"));
-            //services.Configure<CertConfig>(ctx.Configuration.GetSection("Hosting:CertConfig"));
+            services.Configure<HostingConfig>(ctx.Configuration.GetSection("Hosting"));
+            services.Configure<CertConfig>(ctx.Configuration.GetSection("Hosting:CertConfig"));
 
-            //services.AddAsyncInitializer<DatabaseMigrator>();
+            services.AddAsyncInitializer<DatabaseMigrator>();
             
             //services.AddSingleton<IDbContextFactory<CoreDatabaseContext>, DatabaseContextProvider>();
             //services.AddSingleton<DatabaseContextProvider>();
             //services.AddDbContextFactory<CoreDatabaseContext,DatabaseContextProvider>(lifetime: ServiceLifetime.Singleton);
             //services.AddDbContextFactory<CoreDatabaseContext>();
-            
-            //var ctrString = $"server={ctx.Configuration["Database:Address"]};port=3306;user={ctx.Configuration["Database:User"]};password={ctx.Configuration["Database:Password"]};database={ctx.Configuration["Database:Database_Name"]}";
-            
+
             services.AddDbContext<CoreDatabaseContext>();
-            //services.AddTransient<IMigrationContext,MigrationContext<CoreDatabaseContext>>();
+            services.AddTransient<IMigrationContext,MigrationContext<CoreDatabaseContext>>();
 
-            //services.AddHttpClient();
+            services.AddHttpClient();
 
-            services.AddTransient<IHostedService, TestManyServiceProviders>();
+            //services.AddTransient<IHostedService, TestManyServiceProviders>();
         }
     }
 }
