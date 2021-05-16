@@ -19,7 +19,7 @@ namespace Aper_bot.Modules.Commands.Rules
     {
         //IDbContextFactory<DatabaseContext> dbFactory;
 
-        public RuleCommands(IDbContextFactory<CoreDatabaseContext> fac)
+        public RuleCommands()
         {
             //dbFactory = fac;
         }

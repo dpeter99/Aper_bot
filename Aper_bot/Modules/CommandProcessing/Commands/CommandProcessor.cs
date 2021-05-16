@@ -27,18 +27,20 @@ namespace Aper_bot.Modules.CommandProcessing.Commands
         private readonly IServiceProvider _provider;
         ILogger<CommandProcessor> _logger;
 
-        IDbContextFactory<CoreDatabaseContext> dbContextFactory;
+        //IDbContextFactory<CoreDatabaseContext> dbContextFactory;
 
         private readonly IEnumerable<ChatCommands> _commands;
         private readonly IOptions<CommandBaseConfig> _config;
 
-        public CommandProcessor(IEventBus bus, IServiceProvider provider, ILogger<CommandProcessor> log, IDbContextFactory<CoreDatabaseContext> fac, IEnumerable<ChatCommands> commands,
+        public CommandProcessor(IEventBus bus, IServiceProvider provider, ILogger<CommandProcessor> log, 
+            //IDbContextFactory<CoreDatabaseContext> fac,
+            IEnumerable<ChatCommands> commands,
             IOptions<CommandBaseConfig> config)
         {
             eventBus = bus;
             _provider = provider;
             _logger = log;
-            dbContextFactory = fac;
+            //dbContextFactory = fac;
             _commands = commands;
             _config = config;
             

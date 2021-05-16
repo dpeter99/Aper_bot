@@ -14,18 +14,16 @@ namespace Aper_bot.Modules.DiscordSlash
         
         public void RegisterServices(HostBuilderContext ctx,IServiceCollection services)
         {
-            services.AddSingleton<SlashCommandHandler>();
+            services.AddTransient<IAsyncInitializer,SlashCommandUpdater>();
             services.AddSingleton<SlashCommandExecutor>();
-            services.AddSingleton<IHostedService>(
-                serviceProvider => serviceProvider.GetService<SlashCommandHandler>()!);
+
             
             services.AddSingleton<ISlashCommandSuplier,MarsCommandSuplier>();
             
-            //services.AddSingleton<IHostedService, SlashCommandHandler>(
-            //    serviceProvider => ((SlashCommandHandler) serviceProvider.GetService<SlashCommandHandler>())!);
 
-            //services.AddDbContext<SlashDbContext>();
-            services.AddDbContextFactory<SlashDbContext>();
+
+            services.AddDbContext<SlashDbContext>();
+
             services.AddScoped<IMigrationContext, MigrationContext<SlashDbContext>>();
         }
 

@@ -179,7 +179,8 @@ namespace Aper_bot.Hosting
             //services.AddSingleton<IDbContextFactory<CoreDatabaseContext>, DatabaseContextProvider>();
             //services.AddSingleton<DatabaseContextProvider>();
             //services.AddDbContextFactory<CoreDatabaseContext,DatabaseContextProvider>(lifetime: ServiceLifetime.Singleton);
-            services.AddDbContextFactory<CoreDatabaseContext>();
+            //services.AddDbContextFactory<CoreDatabaseContext>();
+            services.AddDbContext<CoreDatabaseContext>();
             services.AddTransient<IMigrationContext,MigrationContext<CoreDatabaseContext>>();
 
             services.AddHttpClient();

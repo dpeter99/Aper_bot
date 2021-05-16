@@ -8,6 +8,7 @@ using System.Runtime.Intrinsics.Arm;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Aper_bot.Database;
 using Aper_bot.Database.Model;
 using Aper_bot.Events;
 using Aper_bot.Modules.CommandProcessing;
@@ -21,6 +22,7 @@ using Aper_bot.Util.Discord;
 using DSharpPlus.SlashCommands.Entities;
 using Extensions.Hosting.AsyncInitialization;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -31,9 +33,9 @@ using ApplicationCommandOption = Aper_bot.Modules.DiscordSlash.Entities.Applicat
 
 namespace Aper_bot.Modules.DiscordSlash
 {
-    public class SlashCommandHandler : IHostedService
+    public class SlashCommandUpdater : IAsyncInitializer
     {
-        private readonly ILogger<SlashCommandHandler> _logger;
+        private readonly ILogger<SlashCommandUpdater> _logger;
 
         private readonly IHttpClientFactory _httpClientFactory;
 
@@ -42,21 +44,22 @@ namespace Aper_bot.Modules.DiscordSlash
         private ISlashCommandSuplier _commandSuplier;
 
         private readonly HttpClient _client;
-        private readonly IDbContextFactory<SlashDbContext> _dbContextFactory;
+        private readonly SlashDbContext _db;
 
         private string? token;
         private string? botID;
 
-        private ConcurrentDictionary<Snowflake, SlashCommand> _commands = new ConcurrentDictionary<Snowflake, SlashCommand>();
+        private ConcurrentDictionary<Snowflake, SlashCommand> _commands = new();
 
-        public SlashCommandHandler(
-            ILogger<SlashCommandHandler> logger,
+        public SlashCommandUpdater(
+            ILogger<SlashCommandUpdater> logger,
             IHttpClientFactory httpClientFactory,
             DiscordBot bot,
             ISlashCommandSuplier commandSuplier,
             IOptions<DiscordConfig> configuration,
             HttpClient http,
-            IDbContextFactory<SlashDbContext> dbContextFactory)
+            SlashDbContext db
+        )
         {
             _logger = logger;
             _httpClientFactory = httpClientFactory;
@@ -68,17 +71,7 @@ namespace Aper_bot.Modules.DiscordSlash
             _commandSuplier = commandSuplier;
 
             _client = http;
-            _dbContextFactory = dbContextFactory;
-        }
-
-        public Task StartAsync(CancellationToken cancellationToken)
-        {
-            return InitializeAsync();
-        }
-
-        public Task StopAsync(CancellationToken cancellationToken)
-        {
-            throw new NotImplementedException();
+            _db = db;
         }
 
         public async Task InitializeAsync()
@@ -92,26 +85,24 @@ namespace Aper_bot.Modules.DiscordSlash
 
             //Load in the commands from discord
             var discordCmds = await GetCommands("611652646721421463");
-            //Load in the database
-            using (var db = _dbContextFactory.CreateDbContext())
-            {
-                foreach (var cmd in suppliedCommands)
-                {
-                    var c = db.Commands.SingleOrDefault(d => d.Name == cmd._applicationCommand.Name);
 
-                    if (c is not null)
-                    {
-                        cmd._applicationCommand.Id = ulong.Parse(c.CommandID);
-                    }
+            foreach (var cmd in suppliedCommands)
+            {
+                var c = _db.Commands.SingleOrDefault(d => d.Name == cmd._applicationCommand.Name);
+
+                if (c is not null)
+                {
+                    cmd._applicationCommand.Id = ulong.Parse(c.CommandID);
                 }
             }
+
 
             //Find new/changed
             //Find removed
             // ... build our update and delete lists ...
             List<SlashCommand> toUpdate = new();
             List<SlashCommand> toRemove = new();
-            
+
             foreach (var cmd in discordCmds)
             {
                 var match = suppliedCommands.FirstOrDefault(c => c._applicationCommand.Id == cmd._applicationCommand.Id);
@@ -128,7 +119,7 @@ namespace Aper_bot.Modules.DiscordSlash
                     toRemove.Add(cmd);
                 }
             }
-            
+
             foreach (var cmd in suppliedCommands)
             {
                 var match = discordCmds.FirstOrDefault(c => c._applicationCommand.Id == cmd._applicationCommand.Id);
@@ -138,7 +129,7 @@ namespace Aper_bot.Modules.DiscordSlash
                     toUpdate.Add(cmd);
                 }
             }
-            
+
 
             //Remove / Update
             // ... then update/add the commands ...
@@ -221,9 +212,9 @@ namespace Aper_bot.Modules.DiscordSlash
                         msg.RequestUri = new Uri($"https://discord.com/api/applications/{botID}/commands");
                     }
 
-                   
+
                     var response = await _client.SendAsync(msg);
-                    
+
                     if (response.IsSuccessStatusCode)
                     {
                         var jsonResult = await response.Content.ReadAsStringAsync();
@@ -232,23 +223,22 @@ namespace Aper_bot.Modules.DiscordSlash
 
                         var slashCommand = new SlashCommand(newCommand, GuildId);
 
-                        using (var db = _dbContextFactory.CreateDbContext())
+
+                        var old = _db.Commands.SingleOrDefault(c => c.Name == newCommand.Name);
+                        if (old is not null)
                         {
-                            var old = db.Commands.SingleOrDefault(c => c.Name == newCommand.Name);
-                            if (old is not null)
-                            {
-                                old.CommandID = newCommand.Id.ToString();
-                            }
-                            else
-                            {
-                                old = new Command(newCommand.Name, newCommand.Id.ToString(), 1);
-                                db.Commands.Add(old);
-                            }
-
-                            await db.SaveChangesAsync();
-
-                            _commands.TryAdd(slashCommand._applicationCommand.Id, slashCommand);
+                            old.CommandID = newCommand.Id.ToString();
                         }
+                        else
+                        {
+                            old = new Command(newCommand.Name, newCommand.Id.ToString(), 1);
+                            _db.Commands.Add(old);
+                        }
+
+                        await _db.SaveChangesAsync();
+
+                        _commands.TryAdd(slashCommand._applicationCommand.Id, slashCommand);
+
 
                         _logger.LogInformation("[DONE] Command updated");
                     }
@@ -297,7 +287,6 @@ namespace Aper_bot.Modules.DiscordSlash
 
         public void RunCommand()
         {
-            
         }
     }
 
@@ -324,12 +313,10 @@ namespace Aper_bot.Modules.DiscordSlash
             {
                 ParseOptions(interactionData.Options, _applicationCommand.Options, arguments);
             }
-            
         }
 
         private void ParseOptions(ApplicationCommandInteractionDataOption[] data, ApplicationCommandOption[] option, CommandArguments commandArguments)
         {
-            
             foreach (var dataOption in data)
             {
                 var commandOption = option.FirstOrDefault(i => i.Name == dataOption.Name);
@@ -337,17 +324,16 @@ namespace Aper_bot.Modules.DiscordSlash
                 {
                     if (commandOption.Options is not null)
                     {
-                        ParseOptions(dataOption.Options,commandOption.Options,commandArguments);
+                        ParseOptions(dataOption.Options, commandOption.Options, commandArguments);
                     }
-                    
+
                     if (dataOption.Value is not null)
                     {
-                        commandArguments.args.Add(dataOption.Name,dataOption.Value.ToString());
+                        commandArguments.args.Add(dataOption.Name, dataOption.Value.ToString());
                     }
-                    
                 }
             }
-            
+
 
             //Debugger.Break();
         }

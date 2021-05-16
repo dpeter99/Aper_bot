@@ -20,7 +20,7 @@ namespace Aper_bot.Modules.Commands
 
         //IDbContextFactory<DatabaseContext> dbContextFactory;
 
-        public UserCommands(Serilog.ILogger log, IDbContextFactory<CoreDatabaseContext> fac)
+        public UserCommands(Serilog.ILogger log)
         {
             logger = log;
             //dbContextFactory = fac;

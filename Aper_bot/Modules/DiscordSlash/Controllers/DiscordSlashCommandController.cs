@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Buffers;
 using System.IO;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Aper_bot.Modules.Discord;
 using Aper_bot.Modules.DiscordSlash.Entities;
@@ -11,6 +13,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using JsonSerializer = Newtonsoft.Json.JsonSerializer;
 
 namespace Aper_bot.Modules.DiscordSlash.Controllers
 {
@@ -67,16 +70,21 @@ namespace Aper_bot.Modules.DiscordSlash.Controllers
                 var response = await _slashModule.HandleWebhookPost(raw);
                 if (response is not null)
                 {
-                    var j = JsonConvert.SerializeObject(response);
+                    var opt = new JsonSerializerSettings();
+                    opt.DefaultValueHandling = DefaultValueHandling.Ignore;
+                    
+                    var j = JsonConvert.SerializeObject(response, opt);
 
                     _logger.LogInformation(j);
                     Console.WriteLine(j);
 
-                    //Response.ContentType = "application/json";
+                    ///Response.ContentType = "application/json";
                     //Response.StatusCode = 200;
                     //return Ok(j);
 
-                    var r = new JsonResult(response);
+                    
+                    
+                    var r = new JsonResult(response, opt);
                     r.ContentType = "application/json";
                     r.StatusCode = 200;
                     

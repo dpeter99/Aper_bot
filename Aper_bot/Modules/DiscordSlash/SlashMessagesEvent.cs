@@ -76,7 +76,7 @@ namespace Aper_bot.Modules.DiscordSlash
             var inter = new InteractionResponse();
             inter.Data = new InteractionApplicationCommandCallbackData();
             inter.Data.TextToSpeech = false;
-            inter.Data.Flags = 64;
+            inter.Data.Flags = 0;
             
             if (Embed is not null)
             {

@@ -13,6 +13,7 @@ using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -20,7 +21,7 @@ using ILogger = Serilog.ILogger;
 
 namespace Aper_bot.Modules.Discord
 {
-    public class DiscordBotStarter:IHostedService
+    public class DiscordBotStarter : IHostedService
     {
         private readonly DiscordBot _bot;
 
@@ -53,16 +54,21 @@ namespace Aper_bot.Modules.Discord
         //private readonly ICommandExecutor _commandExecutor;
         //readonly IEventBus eventBus;
 
-        readonly IDbContextFactory<CoreDatabaseContext> dbContextFactory;
+        //readonly IDbContextFactory<CoreDatabaseContext> dbContextFactory;
 
-        public DiscordBot(ILogger<DiscordBot> logger, ICommandProcessor commandProcessor, IOptions<DiscordConfig> configuration, IDbContextFactory<CoreDatabaseContext> fac, ILoggerProvider loggerProvider)
+        public IServiceProvider Services { get; }
+        
+        public DiscordBot(ILogger<DiscordBot> logger, ICommandProcessor commandProcessor,
+                IOptions<DiscordConfig> configuration,
+                IServiceProvider services, ILoggerProvider loggerProvider)
         {
 
             Log = logger;
             _commandProcessor = commandProcessor;
             //_commandExecutor = commandExecutor;
             //eventBus = bus;
-            dbContextFactory = fac;
+            Services = services;
+            //dbContextFactory = fac;
 
             var loggerFactory = LoggerFactory.Create(builder =>
             {
@@ -107,9 +113,17 @@ namespace Aper_bot.Modules.Discord
 
         Task NewMessage(DiscordClient discordClient,MessageCreateEventArgs messageCreateArgs)
         {
-            var new_event = new DiscordMessageCreatedEvent(messageCreateArgs,dbContextFactory.CreateDbContext());
+            using (var scope = Services.CreateScope())
+            {
+                var dbContext = scope.ServiceProvider.GetRequiredService<CoreDatabaseContext>();
 
-            _commandProcessor.ProcessMessage(new_event);
+                
+                var new_event = new DiscordMessageCreatedEvent(messageCreateArgs,dbContext);
+
+                _commandProcessor.ProcessMessage(new_event);
+            }
+            
+
 
             return Task.CompletedTask;
         }

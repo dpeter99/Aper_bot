@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -12,6 +13,7 @@ using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands.Entities;
 using Mars;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -21,13 +23,16 @@ namespace Aper_bot.Modules.DiscordSlash
     {
         private ICommandProcessor tree;
 
-        readonly IDbContextFactory<CoreDatabaseContext> dbContextFactory;
+        //readonly IDbContextFactory<CoreDatabaseContext> dbContextFactory;
         
-        public SlashCommandExecutor(ICommandProcessor tree, IDbContextFactory<CoreDatabaseContext> fac)
+        public SlashCommandExecutor(ICommandProcessor tree,IServiceProvider services /*IDbContextFactory<CoreDatabaseContext> fac*/)
         {
             this.tree = tree;
-            this.dbContextFactory = fac;
+            Services = services;
+            //this.dbContextFactory = fac;
         }
+        
+        public IServiceProvider Services { get; }
 
 
         public async Task<object?> HandleWebhookPost(string raw)
@@ -40,27 +45,31 @@ namespace Aper_bot.Modules.DiscordSlash
             // and using a DiscordUser instead. I would have to set the Lib as upstream to this before I
             // would be able to change this.
             i.User = user;
-            
-            
-            var messageEvent = new SlashMessageEvent(i, dbContextFactory.CreateDbContext());
 
-            
-            var res = Parse(i.Data);
-
-            if (res.Callback is not null)
+            using (var scope = Services.CreateScope())
             {
-                //messageEvent.Respond("WELL well");
-                if (res.Callback is CommandFunction func)
+                var dbContext = scope.ServiceProvider.GetRequiredService<CoreDatabaseContext>();
+                var messageEvent = new SlashMessageEvent(i, dbContext);
+
+
+                var res = Parse(i.Data);
+
+                if (res.Callback is not null)
                 {
-                    func.Cmd(res, messageEvent);
+                    //messageEvent.Respond("WELL well");
+                    if (res.Callback is CommandFunction func)
+                    {
+                        func.Cmd(res, messageEvent);
+                    }
                 }
+                else
+                {
+                    messageEvent.RespondError("Could not find the command");
+                }
+
+
+                return messageEvent.GetResponse();
             }
-            else
-            {
-                messageEvent.RespondError("Could not find the command");
-            }
-            
-            return messageEvent.GetResponse();
         }
 
         ParseResult Parse(ApplicationCommandInteractionData? interactionData)

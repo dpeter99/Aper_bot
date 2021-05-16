@@ -28,6 +28,9 @@ namespace Aper_bot.Hosting.WebHost
 
             services.AddRouting();
 
+
+
+
             //the following line adds the automatic renewal service.
             services.AddFluffySpoonLetsEncrypt(new LetsEncryptOptions()
             {
@@ -53,7 +56,7 @@ namespace Aper_bot.Hosting.WebHost
             services.AddFluffySpoonLetsEncryptMemoryChallengePersistence();
             
             
-            services.AddControllers();
+            services.AddControllers().AddNewtonsoftJson();
 
             // Register the Swagger generator, defining 1 or more Swagger documents
             services.AddSwaggerGen();

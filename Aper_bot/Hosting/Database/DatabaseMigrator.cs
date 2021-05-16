@@ -39,16 +39,25 @@ namespace Aper_bot.Hosting.Database
     
     public class MigrationContext<T>: IMigrationContext  where T : DbContext 
     {
-        private readonly IDbContextFactory<T> _factory;
+        //private readonly IDbContextFactory<T> _factory;
 
+        /*
         public MigrationContext(IDbContextFactory<T> factory)
         {
             _factory = factory;
         }
+        */
+
+        private readonly T dbContext;
+        
+        public MigrationContext(T factory)
+        {
+            dbContext = factory;
+        }
         
         public DbContext GetContext()
         {
-            return _factory.CreateDbContext();
+            return dbContext;
         }
     }
 }
