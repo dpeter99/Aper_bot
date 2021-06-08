@@ -19,6 +19,8 @@ namespace Aper_bot.Modules.CommandProcessing
             services.Configure<CommandBaseConfig>(ctx.Configuration.GetSection("CommandsConfig"));
             
             services.AddSingleton<ICommandExecutor,CommandExecutor>();
+            services.AddSingleton<IAsyncInitializer>(
+                serviceProvider => ((CommandExecutor) serviceProvider.GetService<ICommandExecutor>()!)!);
 
             services.AddSingleton<ICommandGraph, CommandGraph>();
             services.AddSingleton<IAsyncInitializer>(

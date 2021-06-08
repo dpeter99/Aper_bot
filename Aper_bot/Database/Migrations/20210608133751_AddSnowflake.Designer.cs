@@ -3,14 +3,16 @@ using System;
 using Aper_bot.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Aper_bot.Database.Migrations
 {
     [DbContext(typeof(CoreDatabaseContext))]
-    partial class CoreDatabaseContextModelSnapshot : ModelSnapshot
+    [Migration("20210608133751_AddSnowflake")]
+    partial class AddSnowflake
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

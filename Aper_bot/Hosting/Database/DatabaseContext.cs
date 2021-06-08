@@ -1,8 +1,11 @@
-﻿using Aper_bot.Database;
+﻿using System;
+using Aper_bot.Database;
 using Aper_bot.Util;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
 
@@ -11,11 +14,14 @@ namespace Aper_bot.Hosting.Database
     public class DatabaseContext : SchemaAwareDbContext
     {
         private readonly IOptions<DatabaseSettings> _options;
+        private readonly ILoggerFactory _loggerFactory;
+        private readonly IHostEnvironment _env;
 
-        public DatabaseContext(string schema, IOptions<DatabaseSettings> options) : base(schema)
+        public DatabaseContext(string schema, IOptions<DatabaseSettings> options, ILoggerFactory loggerFactory, IHostEnvironment env) : base(schema)
         {
             _options = options;
-            
+            _loggerFactory = loggerFactory;
+            _env = env;
         }
         
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -29,10 +35,15 @@ namespace Aper_bot.Hosting.Database
                 optionsBuilder.UseMySql(
                     connectionString,
                     MariaDbServerVersion.Parse("10.4.12-MariaDB-1:10.4.12+maria~bionic"),
-                    MysqlOptions);
+                    MysqlOptions)
+                    .UseLoggerFactory(_loggerFactory)
+                    .EnableDetailedErrors();
 
-                //.EnableSensitiveDataLogging()
-                //.EnableDetailedErrors();
+                if (_env.IsDevelopment())
+                {
+                    optionsBuilder.EnableSensitiveDataLogging();
+                }
+                
             }
         }
         
@@ -42,6 +53,8 @@ namespace Aper_bot.Hosting.Database
             //options.CharSetBehavior(CharSetBehavior.NeverAppend);
             options.SchemaBehavior(MySqlSchemaBehavior.Translate, Translator);
             options.MigrationsHistoryTable(Translator(_schema, HistoryRepository.DefaultTableName));
+            
+            
         }
 
         private static string Translator(string schemaname, string objectname)

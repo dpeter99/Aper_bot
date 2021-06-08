@@ -1,19 +1,17 @@
 ﻿FROM mcr.microsoft.com/dotnet/sdk:5.0 AS build
 WORKDIR /DockerSource
 
+LABEL org.opencontainers.image.source = "https://github.com/dpeter99/Aper_bot"
+
 # Copy csproj and restore as distinct layers
 COPY *.sln .
 COPY NuGet.Config .
 COPY Aper_bot/*.csproj ./Aper_bot/
-COPY Brigadier.NET/Brigadier.NET/*.csproj ./Brigadier.NET/Brigadier.NET/
-COPY DSharpPlus.SlashCommands/DSharpPlus.SlashCommands/*.csproj ./DSharpPlus.SlashCommands/DSharpPlus.SlashCommands/
-COPY Planning/*.csproj ./Planning/
-RUN dotnet restore
+COPY Aper_bot.Test/*.csproj ./Aper_bot.Test/
+RUN dotnet restore Aper_bot
 
 # Copy everything else and build website
 COPY Aper_bot/. ./Aper_bot/
-COPY Brigadier.NET/. ./Brigadier.NET/
-COPY DSharpPlus.SlashCommands/. ./DSharpPlus.SlashCommands/
 
 WORKDIR /DockerSource/Aper_bot
 

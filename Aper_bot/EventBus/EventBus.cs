@@ -86,9 +86,9 @@ namespace Aper_bot.EventBus
 
                 foreach (var listener in listeners)
                 {
-                    if (listener.Value.GetParameters()[0].ParameterType.IsInstanceOfType(e))
+                    if (listener.Value.GetParameters()[0].ParameterType.IsAssignableFrom(t))
                     {
-                        listeners[e.GetType()].Invoke(Listener, new[] { e });
+                        listener.Value.Invoke(Listener, new[] { e });
                     }
                 }
                 

@@ -18,10 +18,10 @@ namespace Aper_bot.Database
             var app = new APCHost(args);
             app.Init();
 
-            var ctx = app.Services?.GetRequiredService<IDbContextFactory<CoreDatabaseContext>>();
+            var ctx = app.Services?.GetRequiredService<CoreDatabaseContext>();
             if(ctx != null)
             {
-                return ctx.CreateDbContext();
+                return ctx;
             }
             throw new Exception("Coudn't make Aper bot ctx");
         }

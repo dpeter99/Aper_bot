@@ -19,7 +19,7 @@ namespace Aper_bot.Database.Model
         public string Name { get; set; }
 
         [Required]
-        public string GuildID { get; set; }
+        public Snowflake GuildID { get; set; }
 
         public List<GuildPermissionLevel> PermissionLevels { get; set; } = new List<GuildPermissionLevel>();
 
@@ -31,7 +31,7 @@ namespace Aper_bot.Database.Model
         // ReSharper disable once CollectionNeverUpdated.Global
         public List<Quote> Quotes { get; set; } = new List<Quote>();
 
-        public Guild(string name, string GuildID)
+        public Guild(string name, Snowflake GuildID)
         {
             Name = name;
             this.GuildID = GuildID;
@@ -47,6 +47,10 @@ namespace Aper_bot.Database.Model
                 
                 builder
                     .Property(x => x.RulesChannelId)
+                    .HasConversion(Snowflake.GetConverter());
+                
+                builder
+                    .Property(x => x.GuildID)
                     .HasConversion(Snowflake.GetConverter());
             }
         }

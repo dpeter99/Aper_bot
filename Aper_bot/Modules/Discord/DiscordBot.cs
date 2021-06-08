@@ -45,30 +45,30 @@ namespace Aper_bot.Modules.Discord
     {
 
         public DiscordClient Client { get; private set; }
-        //public DiscordSlashClient SlashClient { get; private set; }
+        
 
         ILogger<DiscordBot> Log;
-
-        private readonly ICommandExecutor _commandExecutor;
+        private readonly IEventBus _eventBus;
 
         //private readonly ICommandExecutor _commandExecutor;
-        //readonly IEventBus eventBus;
-
-        //readonly IDbContextFactory<CoreDatabaseContext> dbContextFactory;
+        
 
         public IServiceProvider Services { get; }
         
-        public DiscordBot(ILogger<DiscordBot> logger, ICommandExecutor commandExecutor,
-                IOptions<DiscordConfig> configuration,
-                IServiceProvider services, ILoggerProvider loggerProvider)
+        public DiscordBot(
+            ILogger<DiscordBot> logger,
+            //ICommandExecutor commandExecutor,
+            IEventBus eventBus,
+            IOptions<DiscordConfig> configuration,
+            IServiceProvider services,
+            ILoggerProvider loggerProvider)
         {
 
             Log = logger;
-            _commandExecutor = commandExecutor;
+            _eventBus = eventBus;
             //_commandExecutor = commandExecutor;
-            //eventBus = bus;
+            
             Services = services;
-            //dbContextFactory = fac;
 
             var loggerFactory = LoggerFactory.Create(builder =>
             {
@@ -120,7 +120,10 @@ namespace Aper_bot.Modules.Discord
                 
                 var new_event = new DiscordMessageCreatedEvent(messageCreateArgs,dbContext);
 
-                _commandExecutor.ProcessMessage(new_event);
+                //_commandExecutor.ProcessMessage(new_event);
+                _eventBus.PostEvent(new_event);
+                
+                
             }
             
             return Task.CompletedTask;

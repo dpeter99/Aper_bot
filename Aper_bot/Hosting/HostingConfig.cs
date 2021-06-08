@@ -5,7 +5,8 @@ namespace Aper_bot.Hosting
     public class HostingConfig
     {
         public CertConfig CertConfig;
-        public int port;
+        public int HttpPort;
+        public int HttpsPort;
     }
 
     public class CertConfig

@@ -20,6 +20,8 @@ namespace Aper_bot.Modules.DiscordSlash
             
             services.AddSingleton<ISlashCommandSuplier,MarsCommandSuplier>();
             
+            services.AddSingleton<SlashCommandWebhooks>();
+            
 
 
             services.AddDbContext<SlashDbContext>(ServiceLifetime.Transient);

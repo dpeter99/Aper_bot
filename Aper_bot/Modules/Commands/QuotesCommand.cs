@@ -144,7 +144,7 @@ namespace Aper_bot.Modules.Commands
                     embed.Author = new DiscordEmbedBuilder.EmbedAuthor();
                     if (quote.Source != null)
                     {
-                        var discordGuild = await DiscordBot.Instance.Client.GetGuildAsync(ulong.Parse(guild.GuildID));
+                        var discordGuild = await DiscordBot.Instance.Client.GetGuildAsync(guild.GuildID);
                         var sourceMember = await discordGuild.GetMemberAsync(ulong.Parse(quote.Source.UserID));
                             
                         embed.Author.IconUrl = sourceMember.AvatarUrl;

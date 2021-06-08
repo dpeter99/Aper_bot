@@ -16,6 +16,8 @@ using System.Text;
 using System.Threading.Tasks;
 using Aper_bot.Hosting.Database;
 using Aper_bot.Util.Discord;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace Aper_bot.Database
 {
@@ -30,7 +32,7 @@ namespace Aper_bot.Database
         public DbSet<Quote> Quotes { get; set; }// => Set<Quote>();
         
 
-        public CoreDatabaseContext(IOptions<DatabaseSettings> options):base(Schema, options)
+        public CoreDatabaseContext(IOptions<DatabaseSettings> options, ILoggerFactory loggerFactory, IHostEnvironment env):base(Schema, options, loggerFactory, env)
         {
 
         }
@@ -69,7 +71,7 @@ namespace Aper_bot.Database
         public Guild? GetGuildFor(DiscordGuild discordGuild)
         {
             var guild = (from u in Guilds
-                        where u.GuildID == discordGuild.Id.ToString()
+                        where u.GuildID == discordGuild.Id
                         select u)
                            .FirstOrDefault();
 
@@ -79,7 +81,7 @@ namespace Aper_bot.Database
         public Guild? GetGuildFor(Snowflake discordGuildId)
         {
             var guild = (from u in Guilds
-                    where u.GuildID == discordGuildId.ToString()
+                    where u.GuildID == discordGuildId
                     select u)
                 .FirstOrDefault();
 

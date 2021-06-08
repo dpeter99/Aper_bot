@@ -5,7 +5,8 @@ using Aper_bot.Modules.CommandProcessing;
 using Aper_bot.Util;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
 using Swashbuckle.AspNetCore.SwaggerGen;
@@ -18,7 +19,7 @@ namespace Aper_bot.Modules.DiscordSlash.Database
         
         //IOptions<DatabaseSettings> settings;
 
-        public SlashDbContext(IOptions<DatabaseSettings> options) : base("SlashCommands", options)
+        public SlashDbContext(IOptions<DatabaseSettings> options, ILoggerFactory loggerFactory, IHostEnvironment env) : base("SlashCommands", options, loggerFactory, env)
         {
             //settings = options;
         }

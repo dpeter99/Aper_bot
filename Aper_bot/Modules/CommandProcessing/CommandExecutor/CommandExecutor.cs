@@ -24,7 +24,7 @@ namespace Aper_bot.Modules.CommandProcessing.Commands
     /// <summary>
     /// This class handles executing commands and processing the command meta data.
     /// </summary>
-    public class CommandExecutor : Singleton<CommandExecutor>, ICommandExecutor
+    public class CommandExecutor : Singleton<CommandExecutor>, ICommandExecutor, IAsyncInitializer
     {
         IEventBus eventBus;
         private readonly ICommandGraph _cmdTree;
@@ -38,12 +38,24 @@ namespace Aper_bot.Modules.CommandProcessing.Commands
             IOptions<CommandBaseConfig> config)
         {
             eventBus = bus;
+            
             _cmdTree = cmdTree;
             _provider = provider;
             _logger = log;
             _config = config;
         }
+
+        public async Task InitializeAsync()
+        {
+            eventBus.Register(this);
+        }
         
+        [EventListener]
+        public void ProcessEvent(IMessageCreatedEvent messageCreatedEvent)
+        {
+            //_logger.LogInformation(messageCreatedEvent.Message);
+            ProcessMessage(messageCreatedEvent);
+        }
         
         
         public async Task RunCommand(ParseResult result, IMessageCreatedEvent msgEvent)
@@ -52,9 +64,6 @@ namespace Aper_bot.Modules.CommandProcessing.Commands
             
             var method = callback.cmdMeta;
             var permission = method.GetCustomAttributes<CommandAttribute>();
-                //from a in 
-                //where a.AttributeType.IsAssignableTo(typeof(ICommandConditionProvider))
-                //select a;
 
             var commandConditionProviders = permission.ToList();
             
@@ -71,8 +80,7 @@ namespace Aper_bot.Modules.CommandProcessing.Commands
 
                 check = check && await con!.CheckCondition(callback, msgEvent, attribute);
             }
-
-            //msgEvent.Respond(check ? "Okay" : "NopNop");
+            
             
             if (check)
             {
@@ -208,6 +216,7 @@ namespace Aper_bot.Modules.CommandProcessing.Commands
             discordMessage.RespondError(text);
         }
         */
+
 
     }
 

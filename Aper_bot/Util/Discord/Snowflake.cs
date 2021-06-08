@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+﻿using System;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Aper_bot.Util.Discord
 {
@@ -17,6 +18,8 @@ namespace Aper_bot.Util.Discord
         }
 
         public static implicit operator ulong(Snowflake d) => d.id;
+        public static implicit operator ulong?(Nullable<Snowflake> d) => d?.id;
+
         public static implicit operator Snowflake(ulong d) => new Snowflake(d);
         
         public static implicit operator long(Snowflake d)

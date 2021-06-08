@@ -4,6 +4,7 @@ using Aper_bot.Database;
 using Aper_bot.Database.Model;
 using Aper_bot.Events;
 using Aper_bot.Modules.DiscordSlash.Entities;
+using Aper_bot.Modules.DiscordSlash.Entities.Builders;
 using Aper_bot.Util.Discord;
 using DSharpPlus.Entities;
 
@@ -14,64 +15,71 @@ namespace Aper_bot.Modules.DiscordSlash
     {
         public Snowflake InteractionID { get; }
 
-        
+        public string InteractionToken { get; }
+
+
         public CoreDatabaseContext Db => db;
         public Guild? Guild { get; }
         public User Author { get; }
         public string Message { get; }
         public DateTime Time { get; }
 
-
-
-        public string Text;
-
-        public DiscordEmbed? Embed;
         
-        public SlashMessageEvent(Entities.Interaction args, CoreDatabaseContext database, Snowflake interactionId) : base(args, database)
+
+        public SlashMessageEvent(Interaction args, CoreDatabaseContext database) : base(args, database)
         {
-            InteractionID = interactionId;
+            InteractionID = args.Id;
+            InteractionToken = args.Token;
             Guild = db.GetGuildFor(args.GuildId);
 
             Author = db.GetOrCreateUserFor(args.User);
 
-            //Message = args.Message.Content;
         }
-        
-        public Task RespondError(string text)
+
+        public async Task RespondError(string text)
         {
-            //throw new NotImplementedException();
             var builder = Discord.DiscordBot.Instance.BaseEmbed();
             builder.Description = text;
             builder.Color = new Optional<DiscordColor>(new DiscordColor(255, 0, 0));
+
+            var embed = builder.Build();
             
-            Embed = builder.Build();
-            //Text = text;
-            return Task.CompletedTask;
+            var resp = MakeResponse(text);
+
+            await SlashCommandWebhooks.Instance.EditOriginalMessage(this, resp.Data);
+            
+            
         }
 
-        public Task Respond(string text)
+        public async Task Respond(string text)
         {
-            //throw new NotImplementedException();
             var builder = Discord.DiscordBot.Instance.BaseEmbed();
             builder.Description = text;
 
-            Embed = builder.Build();
+            var embed = builder.Build();
+
+            var resp = MakeResponse(text);
+
+            await SlashCommandWebhooks.Instance.EditOriginalMessage(this, resp.Data);
             
-            return Task.CompletedTask;
         }
 
         public async Task<DiscordMessage> Respond(DiscordEmbed text)
         {
-            //throw new NotImplementedException();
-            this.Embed = text;
-            return null;
+            var resp = MakeResponse(text);
+
+            var m = await SlashCommandWebhooks.Instance.EditOriginalMessage(this, resp.Data);
+            
+            return m!;
         }
 
-        public Task<DiscordMessage> RespondBasic(string text)
+        public async Task<DiscordMessage> RespondBasic(string text)
         {
-           // throw new NotImplementedException();
-           this.Text = text;
-           return null;
+            var resp = MakeResponse(text);
+
+            var m = await SlashCommandWebhooks.Instance.EditOriginalMessage(this, resp.Data);
+            
+            return m;
         }
 
         public InteractionResponse GetResponse()
@@ -81,24 +89,38 @@ namespace Aper_bot.Modules.DiscordSlash
             inter.Data.TextToSpeech = false;
             inter.Data.Flags = 0;
             
-            if (Embed is not null)
-            {
-                inter.Type = InteractionResponseType.ChannelMessageWithSource;
-                inter.Data.Embeds = new[] {Embed};
-            }
-            else if (string.IsNullOrWhiteSpace(Text))
             {
                 inter.Type = InteractionResponseType.DeferredChannelMessageWithSource;
-                
             }
-            else
-            {
-                inter.Type = InteractionResponseType.ChannelMessageWithSource;
-                
+            
+            return inter;
+        }
 
-                inter.Data.Content = Text;
-            }
+        public InteractionResponse MakeResponse(string text)
+        {
+            var inter = new InteractionResponse();
+            inter.Data = new InteractionApplicationCommandCallbackData();
+            inter.Data.TextToSpeech = false;
+            inter.Data.Flags = 0;
+            
+            inter.Type = InteractionResponseType.ChannelMessageWithSource;
 
+            inter.Data.Content = text;
+            
+            return inter;
+        }
+        
+        public InteractionResponse MakeResponse(DiscordEmbed text)
+        {
+            var inter = new InteractionResponse();
+            inter.Data = new InteractionApplicationCommandCallbackData();
+            inter.Data.TextToSpeech = false;
+            inter.Data.Flags = 0;
+            
+            inter.Type = InteractionResponseType.ChannelMessageWithSource;
+
+            inter.Data.Embeds = new []{text};
+            
             return inter;
         }
     }

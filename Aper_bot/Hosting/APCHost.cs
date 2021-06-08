@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Reflection;
@@ -76,15 +77,19 @@ namespace Aper_bot.Hosting
                 "{Modules}",
                 String.Join("\n",_modules.Select(m => m.Key)));
             
+            var config = new ConfigurationBuilder()  
+                .SetBasePath(Directory.GetCurrentDirectory())  
+                .AddJsonFile("appsettings.json", optional: false)  
+                .Build();
             
             //Build the Host
             var builder = Host.CreateDefaultBuilder(_args);
 
-            if (_modules.Any(m => m.Value.IsAspRequiered()))
-                builder.ConfigureWebHost(WebHostConfig);
+            builder.ConfigureAppConfiguration(Settings);
 
+            if (_modules.Any(m => m.Value.IsAspRequiered()))
+                builder.ConfigureWebHost(b=>WebHostConfig(b,config));
             
-             
             
             builder.ConfigureLogging((context, l) =>
             {
@@ -106,8 +111,23 @@ namespace Aper_bot.Hosting
             _host = builder.Build();
         }
 
-        private void WebHostConfig(IWebHostBuilder builder)
+        public void Run()
         {
+            if (_host != null)
+            {
+                
+                _host.InitAsync().Wait();
+                _host.Run();
+            }
+            else
+            {
+                _logger.LogCritical("There is no host to run. The host building might have failed");
+            }
+        }
+        
+        private void WebHostConfig(IWebHostBuilder builder, IConfigurationRoot config)
+        {
+            
             builder.UseStartup<Setup>();
             
             builder.UseKestrel((builderContext, options) =>
@@ -116,27 +136,24 @@ namespace Aper_bot.Hosting
                 
                 options.Configure(builderContext.Configuration.GetSection("Kestrel"), reloadOnChange: true);
                 
-                options.Listen(IPAddress.Any,80);
-                options.Listen(IPAddress.Any, 25580,configure: a => { a.UseHttps(); });
+                options.Listen(IPAddress.Any, config.GetValue<int>("Hosting:HttpPort"));
                 
+                if (config.GetValue<bool>("Hosting:UseHTTPS"))
+                {
+                    options.Listen(IPAddress.Any, config.GetValue<int>("Hosting:HttpsPort"), configure: a => { a.UseHttps(); });
+                }
+
             });
         }
 
-
-        public void Run()
+        private static void Settings(HostBuilderContext env, IConfigurationBuilder arg2)
         {
-            if (_host != null)
+            if(env.HostingEnvironment.IsDevelopment() || env.HostingEnvironment.EnvironmentName == "Design")
             {
-                
-                _host.InitAsync();
-                _host.Run();
-            }
-            else
-            {
-                _logger.LogCritical("There is no host to run. The host building might have failed");
+                arg2.AddUserSecrets<APCHost>();
             }
         }
-
+        
         private void RegisterModules()
         {
             //Add the modules to the list.

@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Extensions.Hosting.AsyncInitialization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace Aper_bot.Hosting.Database
 {
@@ -10,11 +11,13 @@ namespace Aper_bot.Hosting.Database
     {
         private readonly IEnumerable<IMigrationContext> _migrationContexts;
         private readonly IHostEnvironment _environment;
+        private readonly ILogger<DatabaseMigrator> _logger;
 
-        public DatabaseMigrator(IEnumerable<IMigrationContext> migrationContexts, IHostEnvironment environment)
+        public DatabaseMigrator(IEnumerable<IMigrationContext> migrationContexts, IHostEnvironment environment, ILogger<DatabaseMigrator> logger)
         {
             _migrationContexts = migrationContexts;
             _environment = environment;
+            _logger = logger;
         }
 
 
@@ -27,6 +30,7 @@ namespace Aper_bot.Hosting.Database
             
             foreach (var migrationContext in _migrationContexts)
             {
+                _logger.LogInformation("Migrating: {Database}", migrationContext.GetContext().GetType().Name);
                 await migrationContext.GetContext().Database.MigrateAsync();
             }
         }
@@ -39,15 +43,6 @@ namespace Aper_bot.Hosting.Database
     
     public class MigrationContext<T>: IMigrationContext  where T : DbContext 
     {
-        //private readonly IDbContextFactory<T> _factory;
-
-        /*
-        public MigrationContext(IDbContextFactory<T> factory)
-        {
-            _factory = factory;
-        }
-        */
-
         private readonly T dbContext;
         
         public MigrationContext(T factory)

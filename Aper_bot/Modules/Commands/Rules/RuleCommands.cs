@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Aper_bot.Database;
@@ -8,6 +9,7 @@ using Aper_bot.Modules.CommandProcessing;
 using Aper_bot.Modules.CommandProcessing.Attributes;
 using Aper_bot.Modules.Discord;
 using Aper_bot.Util;
+using Aper_bot.Util.Discord;
 using DSharpPlus.Entities;
 using Mars;
 using Mars.Arguments;
@@ -18,8 +20,11 @@ namespace Aper_bot.Modules.Commands.Rules
     [CommandProvider]
     class RuleCommands : ChatCommands
     {
-        public RuleCommands()
+        private readonly DiscordBot _bot;
+
+        public RuleCommands(DiscordBot bot)
         {
+            _bot = bot;
         }
 
         public override IEnumerable<CommandNode> Register()
@@ -31,7 +36,8 @@ namespace Aper_bot.Modules.Commands.Rules
                 .ThisCalls(AddRule);
 
             quote.NextLiteral("remove")
-                .NextArgument("num", new IntArgument());
+                .NextArgument("num", new IntArgument())
+                .ThisCalls(RemoveRule);
 
             quote.NextLiteral("list")
                 .ThisCalls(ListRules);
@@ -95,7 +101,7 @@ namespace Aper_bot.Modules.Commands.Rules
             
             await messageEvent.Respond("Added");
 
-            //await UpdateRules(discordMessageEvent);
+            await UpdateRules(messageEvent);
         }
 
         [GuildRequiered]
@@ -123,7 +129,8 @@ namespace Aper_bot.Modules.Commands.Rules
             guild!.Rules.Sort((a, b) => a.Number - b.Number);
             foreach (var item in guild!.Rules)
             {
-                text += $"\n\n{DiscordEmoji.FromName(DiscordBot.Instance.Client, $":{item.Number.ToName()}:")} {item.Description}";
+                //text += $"\n\n{DiscordEmoji.FromName(DiscordBot.Instance.Client, $":{item.Number.ToName()}:")} {item.Description}";
+                text += $"\n{EmojiHelper.Number(item.Number)} {item.Description}";
             }
 
             return text;
@@ -151,40 +158,62 @@ namespace Aper_bot.Modules.Commands.Rules
             await messageEvent.Db.SaveChangesAsync();
         }
         
-        /*
-        private async Task RemoveRule(CommandContext<CommandExecutionContext> context, IMessageCreatedEvent discordMessageEvent)
+        private async Task UpdateRules(IMessageCreatedEvent messageEvent)
         {
-            var guild = discordMessageEvent.Guild;
-            if (guild == null)
+            var guild = messageEvent.Guild!;
+            if (guild.RulesChannelId == null ||
+                guild.RulesMessageId == null)
             {
-                discordMessageEvent.RespondError("The server is not set up");
                 return;
             }
 
-            var num = context.GetArgument<int>("num");
+            await messageEvent.Db.Attach(guild).Collection(g => g.Rules).LoadAsync();
+            
+            var text = RulesText(guild);
 
-            await context.Source.Db.Entry(guild).Collection(g => g!.Rules).LoadAsync();
+            var embed = DiscordBot.Instance.BaseEmbed();
+            embed.Title = "Server Rules";
+            embed.Description = text;
+            embed.Author = null;
+            if (guild.RulesChannelId is not null && guild.RulesMessageId != null)
+            {
+                var DGuild = await _bot.Client.GetGuildAsync(new Snowflake(guild.GuildID));
+                var ch = DGuild.GetChannel((guild.RulesChannelId ?? null));
+                
+                var me = await ch.GetMessageAsync(guild.RulesMessageId ?? 0L);
+                await me.ModifyAsync(embed: embed.Build());
+            }
+        }
+
+        [GuildRequiered]
+        private async Task RemoveRule(ParseResult result, IMessageCreatedEvent messageEvent)
+        {
+            var guild = messageEvent.Guild!;
+
+            var num = result.GetIntArg("num");
+
+            await messageEvent.Db.Entry(guild).Collection(g => g!.Rules).LoadAsync();
 
             guild!.Rules.Sort((a, b) => a.Number - b.Number);
             var rule = guild!.Rules.Find(r => r.Number == num);
             if (rule == null)
             {
-                discordMessageEvent.RespondError($"Could not find rule {num}");
+                messageEvent.RespondError($"Could not find rule {num}");
                 return;
             }
 
             guild.Rules.Remove(rule);
-            context.Source.Db.Remove(rule);
+            messageEvent.Db.Remove(rule);
 
             guild.Rules.ContinuouslyNumber(((guildRule, i) => guildRule.Number = i), 1);
 
-            discordMessageEvent.Respond("Removed");
-            await context.Source.Db.SaveChangesAsync();
+            messageEvent.Respond("Removed");
+            await messageEvent.Db.SaveChangesAsync();
 
-            await UpdateRules(discordMessageEvent);
+            await UpdateRules(messageEvent);
             return;
         }
-        */
+        
         
         /*
         async Task SingleRule(CommandContext<CommandExecutionContext> context, IMessageCreatedEvent discordMessageEvent)
@@ -261,31 +290,6 @@ namespace Aper_bot.Modules.Commands.Rules
             await discordMessageEvent.Respond("Added");
 
             await UpdateRules(discordMessageEvent);
-        }
-
-
-
-        private async Task UpdateRules(IMessageCreatedEvent messageEvent)
-        {
-            var guild = messageEvent.Guild;
-            if (guild?.RulesChannelId == null ||
-                guild?.RulesMessageId == null)
-            {
-                return;
-            }
-
-            var text = RulesText(guild);
-
-            var embed = DiscordBot.Instance.BaseEmbed();
-            embed.Title = "Server Rules";
-            embed.Description = text;
-            embed.Author = null;
-            if (guild.RulesChannelId != null && guild.RulesMessageId != null)
-            {
-                var ch = ((DiscordMessageCreatedEvent)messageEvent).@event.Guild.GetChannel(guild.RulesChannelId ?? 0L);
-                var me = await ch.GetMessageAsync(guild.RulesMessageId ?? 0L);
-                await me.ModifyAsync(embed: embed.Build());
-            }
         }
 
 

@@ -8,9 +8,9 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{0970B929-048E-44B2-8319-B1E5544B978B}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
+		Dockerfile = Dockerfile
+		NewFile1.md = NewFile1.md
 	EndProjectSection
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DSharpPlus.SlashCommands", "DSharpPlus.SlashCommands\DSharpPlus.SlashCommands\DSharpPlus.SlashCommands.csproj", "{61BE40EF-69E5-47F0-BE71-4212674DE296}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mars", "..\..\..\Mars\Mars\Mars\Mars.csproj", "{9A623087-82FA-4F8D-8401-9FBDCE563907}"
 EndProject
@@ -26,10 +26,6 @@ Global
 		{6CB317AC-927D-473D-8A34-1DBF1E73C237}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6CB317AC-927D-473D-8A34-1DBF1E73C237}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6CB317AC-927D-473D-8A34-1DBF1E73C237}.Release|Any CPU.Build.0 = Release|Any CPU
-		{61BE40EF-69E5-47F0-BE71-4212674DE296}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{61BE40EF-69E5-47F0-BE71-4212674DE296}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{61BE40EF-69E5-47F0-BE71-4212674DE296}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{61BE40EF-69E5-47F0-BE71-4212674DE296}.Release|Any CPU.Build.0 = Release|Any CPU
 		{9A623087-82FA-4F8D-8401-9FBDCE563907}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{9A623087-82FA-4F8D-8401-9FBDCE563907}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9A623087-82FA-4F8D-8401-9FBDCE563907}.Release|Any CPU.ActiveCfg = Release|Any CPU

@@ -77,19 +77,11 @@ namespace Aper_bot.Modules.DiscordSlash.Controllers
 
                     _logger.LogInformation(j);
                     Console.WriteLine(j);
-
-                    ///Response.ContentType = "application/json";
-                    //Response.StatusCode = 200;
-                    //return Ok(j);
-
-                    
                     
                     var r = new JsonResult(response, opt);
                     r.ContentType = "application/json";
                     r.StatusCode = 200;
-                    
-                    //_logger.LogInformation(r.Value.ToString());
-                    
+
                     return r;
                     
                     

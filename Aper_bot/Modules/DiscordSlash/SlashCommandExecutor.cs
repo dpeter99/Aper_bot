@@ -5,6 +5,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Aper_bot.Database;
+using Aper_bot.EventBus;
 using Aper_bot.Modules.CommandProcessing;
 using Aper_bot.Modules.CommandProcessing.Commands;
 using Aper_bot.Modules.CommandProcessing.CommandTree;
@@ -25,11 +26,13 @@ namespace Aper_bot.Modules.DiscordSlash
     {
         private ICommandGraph _tree;
         private readonly ICommandExecutor _executor;
+        private readonly IEventBus _eventBus;
 
-        public SlashCommandExecutor(ICommandGraph tree, ICommandExecutor executor, IServiceProvider services)
+        public SlashCommandExecutor(ICommandGraph tree, ICommandExecutor executor, IServiceProvider services, IEventBus eventBus, SlashCommandWebhooks webhooks)
         {
             _tree = tree;
             _executor = executor;
+            _eventBus = eventBus;
             Services = services;
         }
         
@@ -49,32 +52,48 @@ namespace Aper_bot.Modules.DiscordSlash
             // would be able to change this.
             i.User = user;
 
+            //_ = RunAsyncCommand(i);//.ConfigureAwait(false);
+            _ = Task.Run(() =>  RunAsyncCommand(i));
+            
+            var inter = new InteractionResponse();
+            inter.Data = new InteractionApplicationCommandCallbackData();
+            inter.Data.TextToSpeech = false;
+            inter.Data.Flags = 0;
+            
+            {
+                inter.Type = InteractionResponseType.DeferredChannelMessageWithSource;
+            }
+
+            return inter;
+
+        }
+
+        private async Task RunAsyncCommand(Interaction? i)
+        {
             using (var scope = Services.CreateScope())
             {
                 var dbContext = scope.ServiceProvider.GetRequiredService<CoreDatabaseContext>();
-                var messageEvent = new SlashMessageEvent(i, dbContext, new Snowflake(i.Id));
+                var messageEvent = new SlashMessageEvent(i, dbContext);
 
 
                 var res = Parse(i.Data);
 
                 if (res.Callback is not null)
                 {
-                    
                     if (res.Callback is CommandFunction func)
                     {
                         //func.Cmd(res, messageEvent);
                         await _executor.RunCommand(res, messageEvent);
+                        //_eventBus.PostEventAsync()
                     }
                 }
                 else
                 {
-                    messageEvent.RespondError("Could not find the command");
+                    //await messageEvent.RespondError("Could not find the command");
                 }
-
-
-                return messageEvent.GetResponse();
             }
         }
+
 
         ParseResult Parse(ApplicationCommandInteractionData? interactionData)
         {
