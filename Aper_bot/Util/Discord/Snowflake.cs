@@ -10,6 +10,11 @@ namespace Aper_bot.Util.Discord
         {
             id = i;
         }
+        
+        public Snowflake(string i)
+        {
+            id = ulong.Parse(i);
+        }
 
         public static implicit operator ulong(Snowflake d) => d.id;
         public static implicit operator Snowflake(ulong d) => new Snowflake(d);
@@ -32,7 +37,8 @@ namespace Aper_bot.Util.Discord
         }
 
         
-        public static implicit operator Snowflake(string d) => new Snowflake(ulong.Parse(d));
+        public static implicit operator Snowflake(string d) => new (ulong.Parse(d));
+        
 
         public override string ToString()
         {

@@ -1,0 +1,9 @@
+EF:
+ - maria DB 10
+ - converter 5
+Unit tests:
+ - 7
+external lib:
+ - 7
+ 
+30

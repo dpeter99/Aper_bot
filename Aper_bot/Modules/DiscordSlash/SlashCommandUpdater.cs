@@ -33,7 +33,7 @@ using ApplicationCommandOption = Aper_bot.Modules.DiscordSlash.Entities.Applicat
 
 namespace Aper_bot.Modules.DiscordSlash
 {
-    public class SlashCommandUpdater : IAsyncInitializer
+    public class SlashCommandUpdater : IHostedService
     {
         private readonly ILogger<SlashCommandUpdater> _logger;
 
@@ -74,6 +74,16 @@ namespace Aper_bot.Modules.DiscordSlash
             _db = db;
         }
 
+        public async Task StartAsync(CancellationToken cancellationToken)
+        {
+            InitializeAsync();
+        }
+
+        public async Task StopAsync(CancellationToken cancellationToken)
+        {
+            //throw new NotImplementedException();
+        }
+
         public async Task InitializeAsync()
         {
             await LoadCommandTree();
@@ -81,64 +91,113 @@ namespace Aper_bot.Modules.DiscordSlash
 
         private async Task LoadCommandTree()
         {
+            _logger.LogInformation("Starting command update to Discord");
+            
             var suppliedCommands = _commandSuplier.GetCommands().ToList(); //Current commands
 
             //Load in the commands from discord
-            var discordCmds = await GetCommands("611652646721421463");
+            var discordCmds = await GetCommands(null);
 
-            foreach (var cmd in suppliedCommands)
+            if (suppliedCommands.Count<=0)
             {
-                var c = _db.Commands.SingleOrDefault(d => d.Name == cmd._applicationCommand.Name);
+                _logger.LogInformation("There are no commands registered");
+            }
 
-                if (c is not null)
+            await MergeAndUpdateCommands(suppliedCommands, discordCmds?.ToList() ?? new List<SlashCommand>());
+        }
+
+        private async Task MergeAndUpdateCommands(List<SlashCommand> registered, List<SlashCommand> discord)
+        {
+            
+            List<SlashCommand> toUpdateDiscord = new();
+            List<SlashCommand> toRemoveDiscord = new();
+            
+            var dbCommands = _db.Commands.Where(c => c.Guild == null);
+
+            //Remove old commands from the database.
+            
+            foreach (var dbCommand in dbCommands)
+            {
+                var cmd = registered.FirstOrDefault(c => c.ApplicationCommand.Name == dbCommand.Name);
+                if (cmd is null)
                 {
-                    cmd._applicationCommand.Id = ulong.Parse(c.CommandID);
+                    _db.Commands.Remove(dbCommand);
                 }
             }
 
+            await _db.SaveChangesAsync();
+            
+            //Remove old commands form discord
 
-            //Find new/changed
-            //Find removed
-            // ... build our update and delete lists ...
-            List<SlashCommand> toUpdate = new();
-            List<SlashCommand> toRemove = new();
-
-            foreach (var cmd in discordCmds)
+            foreach (var discordCommand in discord)
             {
-                var match = suppliedCommands.FirstOrDefault(c => c._applicationCommand.Id == cmd._applicationCommand.Id);
-                if (match is not null)
+                var cmd = registered.FirstOrDefault(c => c.ApplicationCommand.Name == discordCommand.ApplicationCommand.Name);
+                
+                if (cmd is null)
                 {
-                    if (cmd._applicationCommand != match._applicationCommand)
+                    toRemoveDiscord.Add(discordCommand);
+                }
+            }
+            
+            //Check and update the existing commands to discord and DB
+
+            foreach (SlashCommand command in registered)
+            {
+                var dbCommand = _db.Commands.FirstOrDefault(c => c.Name == command.ApplicationCommand.Name);
+                if (dbCommand is null)
+                {
+                    toUpdateDiscord.Add(command);
+                    continue;
+                }
+                
+                var discordCommand = discord.FirstOrDefault(c => c.ApplicationCommand.Name == command.ApplicationCommand.Name);
+
+                if (discordCommand is not null)
+                {
+
+                    
+                    if (command.Meta!._version != dbCommand.Version)
                     {
-                        toUpdate.Add(cmd);
+                        
+                        if (command.Meta._version > dbCommand.Version)
+                        {
+                            toUpdateDiscord.Add(command);
+                            dbCommand!.Version = command.Meta._version;
+
+                            _logger.LogInformation("{Name} is registered for update from:{VersionOld} to: {VersionNew}",
+                                command.ApplicationCommand.Name,dbCommand!.Version,command.Meta._version);
+
+                        }
+                        else
+                        {
+                            _logger.LogError(
+                                "Possible downgrade command version for: {Name}. Old version:{VersionOld} New version: {VersionNew}",
+                                command.ApplicationCommand.Name,dbCommand!.Version,command.Meta._version);
+                        }
+                    }
+                    else
+                    {
+                        _logger.LogInformation("Last version of {Name} is: {Version} no need to update",command.ApplicationCommand.Name,dbCommand!.Version);
                     }
                 }
                 else
                 {
-                    // queue the command for deletion.
-                    toRemove.Add(cmd);
+                    toUpdateDiscord.Add(command);
+                    _logger.LogInformation("Discord doesn't have {Name} is: {Version} no need to update", command.ApplicationCommand.Name,dbCommand!.Version);
                 }
             }
-
-            foreach (var cmd in suppliedCommands)
-            {
-                var match = discordCmds.FirstOrDefault(c => c._applicationCommand.Id == cmd._applicationCommand.Id);
-                if (match is null)
-                {
-                    // queue the command for deletion.
-                    toUpdate.Add(cmd);
-                }
-            }
-
-
+            
+            
+            
             //Remove / Update
             // ... then update/add the commands ...
-            await UpdateOrAddCommands(toUpdate);
+            await UpdateOrAddCommands(toUpdateDiscord);
             // ... and delete any old commands ...
-            await RemoveOldCommands(toRemove);
+            await RemoveOldCommands(toRemoveDiscord);
+            
         }
 
-        private async Task<IEnumerable<SlashCommand>> GetCommands(string? guildId)
+        private async Task<IEnumerable<SlashCommand>> GetCommands(Snowflake? guildId)
         {
             HttpRequestMessage msg = new();
             msg.Headers.Authorization = new("Bot", token);
@@ -160,13 +219,15 @@ namespace Aper_bot.Modules.DiscordSlash
                 var jsonResult = await response.Content.ReadAsStringAsync();
 
                 var newCmds = JsonConvert.DeserializeObject<ApplicationCommand[]>(jsonResult);
-
-                foreach (var command in newCmds)
+                if (newCmds is not null)
                 {
-                    _logger.LogInformation($"Discord has {command.Name}");
+                    foreach (var command in newCmds)
+                    {
+                        _logger.LogInformation($"Discord has {command.Name}");
+                    }
                 }
-
-                var newCommands = newCmds.Select(c => new SlashCommand(c, guildId));
+                
+                var newCommands = newCmds.Select(c => new SlashCommand(c, guildId, null));
 
                 return newCommands;
             }
@@ -182,19 +243,21 @@ namespace Aper_bot.Modules.DiscordSlash
 
         private async Task UpdateOrAddCommands(IEnumerable<SlashCommand> toUpdate)
         {
-            var GuildId = "611652646721421463";
+            
 
             foreach (var command in toUpdate)
             {
+                var guildId = command.Guild;
+                
                 using (var s = _logger.BeginScope(toUpdate))
                 {
-                    _logger.LogInformation("[    ] Updating command: {Comand}", command._applicationCommand.Name);
+                    _logger.LogInformation("[    ] Updating command: {Comand}", command.ApplicationCommand.Name);
 
                     HttpRequestMessage msg = new();
                     msg.Headers.Authorization = new("Bot", token);
                     msg.Method = HttpMethod.Post;
 
-                    var json = JsonConvert.SerializeObject(command._applicationCommand, Formatting.Indented, new JsonSerializerSettings
+                    var json = JsonConvert.SerializeObject(command.ApplicationCommand, Formatting.Indented, new JsonSerializerSettings
                     {
                         NullValueHandling = NullValueHandling.Ignore,
                         DefaultValueHandling = DefaultValueHandling.Ignore
@@ -203,15 +266,16 @@ namespace Aper_bot.Modules.DiscordSlash
                     msg.Content.Headers.ContentType = new("application/json");
 
 
-                    if (GuildId is not null)
+                    if (guildId is not null)
                     {
-                        msg.RequestUri = new Uri($"https://discord.com/api/applications/{botID}/guilds/{GuildId}/commands");
+                        msg.RequestUri = new Uri($"https://discord.com/api/applications/{botID}/guilds/{guildId}/commands");
                     }
                     else
                     {
                         msg.RequestUri = new Uri($"https://discord.com/api/applications/{botID}/commands");
                     }
 
+                    _logger.LogDebug("[    ] Sending message: {Json}", json);
 
                     var response = await _client.SendAsync(msg);
 
@@ -221,7 +285,7 @@ namespace Aper_bot.Modules.DiscordSlash
 
                         var newCommand = JsonConvert.DeserializeObject<ApplicationCommand>(jsonResult);
 
-                        var slashCommand = new SlashCommand(newCommand, GuildId);
+                        var slashCommand = new SlashCommand(newCommand, guildId, null);
 
 
                         var old = _db.Commands.SingleOrDefault(c => c.Name == newCommand.Name);
@@ -231,21 +295,23 @@ namespace Aper_bot.Modules.DiscordSlash
                         }
                         else
                         {
-                            old = new Command(newCommand.Name, newCommand.Id.ToString(), 1);
+                            old = new Command(newCommand.Name, newCommand.Id.ToString(), command.Meta?._version ?? 0);
                             _db.Commands.Add(old);
                         }
 
                         await _db.SaveChangesAsync();
 
-                        _commands.TryAdd(slashCommand._applicationCommand.Id, slashCommand);
+                        _commands.TryAdd(slashCommand.ApplicationCommand.Id, slashCommand);
 
 
                         _logger.LogInformation("[DONE] Command updated");
+                        _logger.LogDebug("[   ] Response was: {Json}", jsonResult);
                     }
                     else
                     {
                         // ... otherwise log the error.
-                        _logger.LogError(await response.Content.ReadAsStringAsync(), "Error while updating command");
+                        _logger.LogError(await response.Content.ReadAsStringAsync(), "Error while updating command Sent data:{data}",json);
+                        
                     }
                 }
             }
@@ -255,19 +321,19 @@ namespace Aper_bot.Modules.DiscordSlash
         {
             foreach (var scfg in toRemove)
             {
-                _logger.LogInformation("[    ] Removing command: {Comand}", scfg._applicationCommand.Name);
+                _logger.LogInformation("[    ] Removing command: {Comand}", scfg.ApplicationCommand.Name);
                 // ... build a new HTTP request message ...
                 HttpRequestMessage msg = new();
                 msg.Headers.Authorization = new("Bot", token);
                 msg.Method = HttpMethod.Delete;
 
-                if (scfg._guild is not null)
+                if (scfg.Guild is not null)
                 {
-                    msg.RequestUri = new Uri($"https://discord.com/api/applications/{botID}/guilds/{scfg._guild}/commands/{scfg._applicationCommand.Id}");
+                    msg.RequestUri = new Uri($"https://discord.com/api/applications/{botID}/guilds/{scfg.Guild}/commands/{scfg.ApplicationCommand.Id}");
                 }
                 else
                 {
-                    msg.RequestUri = new Uri($"https://discord.com/api/applications/{botID}/commands/{scfg._applicationCommand.Id}");
+                    msg.RequestUri = new Uri($"https://discord.com/api/applications/{botID}/commands/{scfg.ApplicationCommand.Id}");
                 }
 
                 var response = await _client.SendAsync(msg);
@@ -275,7 +341,7 @@ namespace Aper_bot.Modules.DiscordSlash
                 if (response.IsSuccessStatusCode)
                 {
                     //Commands.TryRemove(scfg.Name, out _);
-                    _logger.LogInformation("[DONE] Removing command: {Comand}", scfg._applicationCommand.Name);
+                    _logger.LogInformation("[DONE] Removing command: {Comand}", scfg.ApplicationCommand.Name);
                 }
                 else
                 {
@@ -292,51 +358,19 @@ namespace Aper_bot.Modules.DiscordSlash
 
     public class SlashCommand
     {
-        public ApplicationCommand _applicationCommand;
+        public ApplicationCommand ApplicationCommand;
 
-        //public Command<CommandContext<CommandArguments>> run;
+        public CommandMetaData Meta;
 
-        public Snowflake? _guild;
+        public Snowflake? Guild;
 
-        public SlashCommand(ApplicationCommand applicationCommand, Snowflake? guild)
+        public SlashCommand(ApplicationCommand applicationCommand, Snowflake? guild, CommandMetaData? meta)
         {
-            _applicationCommand = applicationCommand;
-            this._guild = guild;
+            ApplicationCommand = applicationCommand;
+            this.Guild = guild;
+            this.Meta = meta ?? new CommandMetaData(0);
         }
-
-        public void Execute(ApplicationCommandInteractionData interactionData)
-        {
-            CommandArguments arguments = new();
-
-            if (interactionData.Options is not null &&
-                _applicationCommand.Options is not null)
-            {
-                ParseOptions(interactionData.Options, _applicationCommand.Options, arguments);
-            }
-        }
-
-        private void ParseOptions(ApplicationCommandInteractionDataOption[] data, ApplicationCommandOption[] option, CommandArguments commandArguments)
-        {
-            foreach (var dataOption in data)
-            {
-                var commandOption = option.FirstOrDefault(i => i.Name == dataOption.Name);
-                if (commandOption is not null)
-                {
-                    if (commandOption.Options is not null)
-                    {
-                        ParseOptions(dataOption.Options, commandOption.Options, commandArguments);
-                    }
-
-                    if (dataOption.Value is not null)
-                    {
-                        commandArguments.args.Add(dataOption.Name, dataOption.Value.ToString());
-                    }
-                }
-            }
-
-
-            //Debugger.Break();
-        }
+        
     }
 
     public class CommandArguments

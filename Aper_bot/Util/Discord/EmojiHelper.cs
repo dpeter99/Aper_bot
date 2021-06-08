@@ -7,7 +7,17 @@ namespace Aper_bot.Util.Discord
     {
         public static string Number(int i)
         {
-            return DiscordEmoji.FromName(DiscordBot.Instance.Client, $":{i.ToName()}:");
+            var si = NumberToName.GetIntArray(i);
+            var res = "";
+            
+            for (int j = 0; j < si.Length; j++)
+            {
+                res += DiscordEmoji.FromName(DiscordBot.Instance.Client, $":{si[j].ToName()}:");
+            }
+
+            
+            
+            return res;
         }
 
         public static string Cross()

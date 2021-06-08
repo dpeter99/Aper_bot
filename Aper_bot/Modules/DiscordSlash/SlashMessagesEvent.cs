@@ -4,15 +4,17 @@ using Aper_bot.Database;
 using Aper_bot.Database.Model;
 using Aper_bot.Events;
 using Aper_bot.Modules.DiscordSlash.Entities;
+using Aper_bot.Util.Discord;
 using DSharpPlus.Entities;
 
 
 namespace Aper_bot.Modules.DiscordSlash
 {
-    public class SlashMessageEvent : CommandSourceStack<Entities.Interaction>, IMessageCreatedEvent
+    public class SlashMessageEvent : CommandSourceStack<Interaction>, IMessageCreatedEvent
     {
-        public string Token { get; }
+        public Snowflake InteractionID { get; }
 
+        
         public CoreDatabaseContext Db => db;
         public Guild? Guild { get; }
         public User Author { get; }
@@ -25,8 +27,9 @@ namespace Aper_bot.Modules.DiscordSlash
 
         public DiscordEmbed? Embed;
         
-        public SlashMessageEvent(Entities.Interaction args, CoreDatabaseContext database) : base(args, database)
+        public SlashMessageEvent(Entities.Interaction args, CoreDatabaseContext database, Snowflake interactionId) : base(args, database)
         {
+            InteractionID = interactionId;
             Guild = db.GetGuildFor(args.GuildId);
 
             Author = db.GetOrCreateUserFor(args.User);

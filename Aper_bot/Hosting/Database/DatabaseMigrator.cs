@@ -25,8 +25,6 @@ namespace Aper_bot.Hosting.Database
                 return;
             }
             
-            
-            
             foreach (var migrationContext in _migrationContexts)
             {
                 await migrationContext.GetContext().Database.MigrateAsync();

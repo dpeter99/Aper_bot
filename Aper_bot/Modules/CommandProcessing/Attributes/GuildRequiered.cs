@@ -6,7 +6,7 @@ using Aper_bot.Modules.Discord;
 namespace Aper_bot.Modules.CommandProcessing.Attributes
 {
     [AttributeUsage(AttributeTargets.Method, Inherited = false, AllowMultiple = false)]
-    sealed class GuildRequiered : Attribute, ICommandConditionProvider
+    sealed class GuildRequiered : CommandAttribute
     {
         private bool _setup;
 
@@ -21,7 +21,7 @@ namespace Aper_bot.Modules.CommandProcessing.Attributes
             _setup = setup;
         }
         
-        public Type GetCondition(CommandExecutionContext context)
+        public override Type GetCondition()
         {
             return typeof(Condition);
         }
@@ -29,22 +29,21 @@ namespace Aper_bot.Modules.CommandProcessing.Attributes
 
         public class Condition : CommandCondition
         {
-            public override async Task<bool> CheckCondition(CommandExecutionContext context, ICommandConditionProvider p)
+            public override async Task<bool> CheckCondition(CommandFunction func, IMessageCreatedEvent context, ICommandConditionProvider provider)
             {
-                var atribute = p as GuildRequiered;
+                var atribute = provider as GuildRequiered;
 
                 if (atribute == null)
                     throw new Exception("Bad input");
                 
-                var db = context.Db;
 
                 if (atribute.Setup)
                 {
-                    return context.Event.Guild != null;
+                    return context.Guild != null;
                 }
                 else
                 {
-                    return ((DiscordMessageCreatedEvent)context.Event).@event.Channel.IsPrivate == false;
+                    return ((DiscordMessageCreatedEvent)context).@event.Channel.IsPrivate == false;
                 }
 
                 

@@ -49,7 +49,7 @@ namespace Aper_bot.Modules.Discord
 
         ILogger<DiscordBot> Log;
 
-        private readonly ICommandProcessor _commandProcessor;
+        private readonly ICommandExecutor _commandExecutor;
 
         //private readonly ICommandExecutor _commandExecutor;
         //readonly IEventBus eventBus;
@@ -58,13 +58,13 @@ namespace Aper_bot.Modules.Discord
 
         public IServiceProvider Services { get; }
         
-        public DiscordBot(ILogger<DiscordBot> logger, ICommandProcessor commandProcessor,
+        public DiscordBot(ILogger<DiscordBot> logger, ICommandExecutor commandExecutor,
                 IOptions<DiscordConfig> configuration,
                 IServiceProvider services, ILoggerProvider loggerProvider)
         {
 
             Log = logger;
-            _commandProcessor = commandProcessor;
+            _commandExecutor = commandExecutor;
             //_commandExecutor = commandExecutor;
             //eventBus = bus;
             Services = services;
@@ -120,7 +120,7 @@ namespace Aper_bot.Modules.Discord
                 
                 var new_event = new DiscordMessageCreatedEvent(messageCreateArgs,dbContext);
 
-                _commandProcessor.ProcessMessage(new_event);
+                _commandExecutor.ProcessMessage(new_event);
             }
             
             return Task.CompletedTask;

@@ -1,79 +1,95 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using Aper_bot.Database;
 using Aper_bot.EventBus;
 using Aper_bot.Events;
+using Aper_bot.Modules.CommandProcessing.Attributes;
+using Aper_bot.Modules.CommandProcessing.CommandTree;
+using Aper_bot.Modules.DiscordSlash;
 using Aper_bot.Util.Singleton;
 using Extensions.Hosting.AsyncInitialization;
 using Mars;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace Aper_bot.Modules.CommandProcessing.Commands
 {
     /// <summary>
-    /// This class is going to handle the incoming commands and than forward them to the right place
+    /// This class handles executing commands and processing the command meta data.
     /// </summary>
-    public class CommandProcessor : Singleton<CommandProcessor>, ICommandProcessor, IAsyncInitializer
+    public class CommandExecutor : Singleton<CommandExecutor>, ICommandExecutor
     {
-        
-        public Mars.CommandTree tree { get; private set; } = new Mars.CommandTree();
-        
         IEventBus eventBus;
+        private readonly ICommandGraph _cmdTree;
         private readonly IServiceProvider _provider;
-        ILogger<CommandProcessor> _logger;
-
-        //IDbContextFactory<CoreDatabaseContext> dbContextFactory;
+        ILogger<CommandExecutor> _logger;
 
         private readonly IEnumerable<ChatCommands> _commands;
         private readonly IOptions<CommandBaseConfig> _config;
 
-        public CommandProcessor(IEventBus bus, IServiceProvider provider, ILogger<CommandProcessor> log, 
-            //IDbContextFactory<CoreDatabaseContext> fac,
-            IEnumerable<ChatCommands> commands,
+        public CommandExecutor(IEventBus bus, ICommandGraph cmdTree, IServiceProvider provider, ILogger<CommandExecutor> log,
             IOptions<CommandBaseConfig> config)
         {
             eventBus = bus;
+            _cmdTree = cmdTree;
             _provider = provider;
             _logger = log;
-            //dbContextFactory = fac;
-            _commands = commands;
             _config = config;
-            
-
         }
-
-        public Task InitializeAsync()
+        
+        
+        
+        public async Task RunCommand(ParseResult result, IMessageCreatedEvent msgEvent)
         {
-            eventBus.Register(this);
+            var callback = (result.Callback as CommandFunction)!;
+            
+            var method = callback.cmdMeta;
+            var permission = method.GetCustomAttributes<CommandAttribute>();
+                //from a in 
+                //where a.AttributeType.IsAssignableTo(typeof(ICommandConditionProvider))
+                //select a;
 
-            foreach (var command in _commands)
+            var commandConditionProviders = permission.ToList();
+            
+            _logger.LogInformation(
+                "Command {CmdName} has the following conditions:\n"+
+                "{Conditions}",
+                "CMD name",
+                String.Join("\n",commandConditionProviders.Select(p => p.GetType().Name)));
+            
+            bool check = true;
+            foreach (var attribute in commandConditionProviders)
             {
-                var cmds = command.Register();
-                if (cmds is not null)
-                {
-                    foreach (var cmd in cmds)
-                    {
-                        tree.AddNode(cmd);
-                    }
-                }
+                var con = ActivatorUtilities.CreateInstance(_provider, attribute.GetCondition()) as CommandCondition;
+
+                check = check && await con!.CheckCondition(callback, msgEvent, attribute);
             }
 
-            _logger.LogInformation(
-                "Found Commands:\n" +
-                "{Modules}",
-                String.Join("\n", _commands.Select(m => m.GetType().Name)));
-
-            return Task.CompletedTask;
-        }
-
-        public void RunCommand(CommandExecutionContext ctx)
-        {
-            throw new NotImplementedException();
+            //msgEvent.Respond(check ? "Okay" : "NopNop");
+            
+            if (check)
+            {
+                try
+                {
+                    callback.Cmd.Invoke(result,msgEvent);
+                }
+                catch (Exception e)
+                {
+                    msgEvent.RespondError(e.Message);
+                }
+            }
+            else
+            {
+                
+                //msgEvent.RespondError("Couldn't authenticate");
+            }
         }
 
         
@@ -88,7 +104,7 @@ namespace Aper_bot.Modules.CommandProcessing.Commands
             var commandText = messageEvent.Message.Remove(0, _config.Value.prefix.Length);
 
             
-            var res = tree.ParseString(commandText);
+            var res = _cmdTree.tree.ParseString(commandText);
 
             if (res.error is not null)
             {
@@ -103,14 +119,24 @@ namespace Aper_bot.Modules.CommandProcessing.Commands
             }
             if (res.Callback is not null)
             {
-                //messageEvent.Respond("WELL well");
-                if (res.Callback is CommandFunction func)
+                try
                 {
-                    func.Cmd(res, messageEvent);
+                    if (res.Callback is CommandFunction func)
+                    {
+                        //func.Cmd(res, messageEvent);
+                        RunCommand(res, messageEvent);
+                    }
+                }
+                catch (Exception e)
+                {
+                    _logger.LogCritical(e,"Critical Exception while running command: {Message}", messageEvent.Message);
+
+                    messageEvent.RespondError("Error");
                 }
             } 
             
         }
+        
 /*
         public async void ExecuteCommand(CommandExecutionContext context)
         {
@@ -182,6 +208,7 @@ namespace Aper_bot.Modules.CommandProcessing.Commands
             discordMessage.RespondError(text);
         }
         */
+
     }
 
 }

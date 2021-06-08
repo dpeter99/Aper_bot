@@ -39,12 +39,12 @@ namespace Aper_bot
                     var dbContext = scope.ServiceProvider.GetService<CoreDatabaseContext>();
 
                     //dbContext.GetGuildFor("611652646721421463");
-                    
-                    var guild = (from u in dbContext.Guilds
+                    /*
+                    var guild = (from u in dbContext?.Guilds
                             where u.GuildID == "611652646721421463"
                             select u)
                         .FirstOrDefault();
-
+*/
                     //var new_event = new DiscordMessageCreatedEvent(,dbContext);
 
 

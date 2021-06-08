@@ -14,7 +14,7 @@ namespace Aper_bot.Modules.DiscordSlash.Database.Model
         public int Version { get; set; }
 
         
-        public Guild Guild { get; set; }
+        public Guild? Guild { get; set; }
 
         public Command(string name, string commandID, int version)
         {

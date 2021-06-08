@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Aper_bot.Database.Model;
 using Aper_bot.Events;
@@ -37,7 +38,7 @@ namespace Aper_bot.Modules.Commands
 
         public override IEnumerable<CommandNode> Register()
         {
-            var quote = new LiteralNode("quote");
+            var quote = new LiteralNode("quote",new CommandMetaData(1));
 
             //#### ADD ######
             var add = quote.NextLiteral("add");
@@ -83,10 +84,10 @@ namespace Aper_bot.Modules.Commands
             var quote = (from q in db.Quotes
                 where q.number == num && q.GuildID == guild!.ID
                 select q).FirstOrDefault();
-            await db.Entry(quote).Reference(r => r.Source).LoadAsync();
             
             if (quote != null)
             {
+                await db.Entry(quote).Reference(r => r.Source).LoadAsync();
                 
                 guild!.Quotes.Remove(quote);
                 await db.SaveChangesAsync();
@@ -95,7 +96,7 @@ namespace Aper_bot.Modules.Commands
                 embed.Title = $"{EmojiHelper.Cross()} Removed Quote";
                 embed.Color = new Optional<DiscordColor>(new DiscordColor(255, 0, 0));
                 embed.Description = $"> {quote.Text}\nby {quote.SourceName}";
-                embed.Timestamp = quote.CreationTime;
+                embed.Timestamp = quote.CreationTime.Year > 1 ? quote.CreationTime : new DateTimeOffset();
 
 
                 embed.Footer = new DiscordEmbedBuilder.EmbedFooter()
@@ -130,7 +131,16 @@ namespace Aper_bot.Modules.Commands
                 {
                     var embed = DiscordBot.Instance.BaseEmbed();
                     embed.Description = quote.Text;
-                    embed.Timestamp = quote.CreationTime;
+
+                    if (quote.CreationTime.Year <= 1)
+                    {
+                        embed.Timestamp = new DateTimeOffset();
+                    }
+                    else
+                    {
+                        embed.Timestamp = quote.CreationTime;
+                    }
+                    
                     embed.Author = new DiscordEmbedBuilder.EmbedAuthor();
                     if (quote.Source != null)
                     {
@@ -161,11 +171,40 @@ namespace Aper_bot.Modules.Commands
             var guild = context.Guild;
             if (guild != null)
             {
-                await db.Entry(guild).Collection(g => g!.Quotes).LoadAsync();
-                
-                var discordGuild = await DiscordBot.Instance.Client.GetGuildAsync(ulong.Parse(guild.GuildID));
+                //var discordGuild = await DiscordBot.Instance.Client.GetGuildAsync(ulong.Parse(guild.GuildID));
                 
                 string text = "";
+                
+                var q = from h in db.Quotes.Include(blog => blog.Source)
+                        where h.Guild == guild
+                        select h;
+                
+                
+
+                //text = q.Aggregate(new StringBuilder(), ((builder, quote) => builder.Append(quote.Text))).ToString();
+                
+                
+                foreach (var quote in q)
+                {
+                    if (quote.Source != null)
+                    {
+                        //var sourceMember = await discordGuild.GetMemberAsync(ulong.Parse(quote.Source.UserID));
+                        var sourceMember = quote.Source.Name;
+                    
+                        text += $"\n{EmojiHelper.Number(quote.number)} *{quote.Text}* - by {sourceMember}";
+                    }
+                    else
+                    {
+                        text += $"\n{EmojiHelper.Number(quote.number)} *{quote.Text}* - by *Anonymous*";
+                    }
+                }
+                
+                
+                //await db.Entry(guild).Collection(g => g!.Quotes).LoadAsync();
+                
+                
+                
+                /*
                 foreach (var item in guild.Quotes)
                 {
                     await db.Entry(item).Reference(r => r.Source).LoadAsync();
@@ -176,7 +215,12 @@ namespace Aper_bot.Modules.Commands
                     
                         text += $"\n{EmojiHelper.Number(item.number)} *{item.Text}* - by {sourceMember.Nickname}";
                     }
+                    else
+                    {
+                        text += $"\n{EmojiHelper.Number(item.number)} *{item.Text}* - by *Anonymous*";
+                    }
                 }
+                */
 
                 var embed = DiscordBot.Instance.BaseEmbed();
                 embed.Title = "Qotes";

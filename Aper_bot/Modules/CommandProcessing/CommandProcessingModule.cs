@@ -3,6 +3,7 @@ using System.Reflection;
 using Aper_bot.Hosting;
 using Aper_bot.Modules.CommandProcessing.Attributes;
 using Aper_bot.Modules.CommandProcessing.Commands;
+using Aper_bot.Modules.CommandProcessing.CommandTree;
 using Aper_bot.Modules.DiscordSlash;
 using Extensions.Hosting.AsyncInitialization;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,9 +18,11 @@ namespace Aper_bot.Modules.CommandProcessing
         {
             services.Configure<CommandBaseConfig>(ctx.Configuration.GetSection("CommandsConfig"));
             
-            services.AddSingleton<ICommandProcessor,CommandProcessor>();
+            services.AddSingleton<ICommandExecutor,CommandExecutor>();
+
+            services.AddSingleton<ICommandGraph, CommandGraph>();
             services.AddSingleton<IAsyncInitializer>(
-                serviceProvider => ((CommandProcessor) serviceProvider.GetService<ICommandProcessor>())!);
+                serviceProvider => ((CommandGraph) serviceProvider.GetService<ICommandGraph>()!)!);
             
             
             

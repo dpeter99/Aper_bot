@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using Aper_bot.Modules.CommandProcessing;
 using Aper_bot.Modules.CommandProcessing.Commands;
+using Aper_bot.Modules.CommandProcessing.CommandTree;
 using Aper_bot.Modules.DiscordSlash.Entities;
 using Aper_bot.Util;
 using DSharpPlus.Entities;
@@ -13,9 +15,9 @@ namespace Aper_bot.Modules.DiscordSlash
     {
         
         private ILogger<MarsCommandSuplier> Logger { get; }
-        private ICommandProcessor CommandTree { get; }
+        private ICommandGraph CommandTree { get; }
 
-        public MarsCommandSuplier(ILogger<MarsCommandSuplier> logger, ICommandProcessor commandTree)
+        public MarsCommandSuplier(ILogger<MarsCommandSuplier> logger, ICommandGraph commandTree)
         {
             Logger = logger;
             CommandTree = commandTree;
@@ -54,7 +56,8 @@ namespace Aper_bot.Modules.DiscordSlash
 
             command.Options = options.ToArray();
             
-            var t = new SlashCommand(command,"611652646721421463");
+            var meta = cmdNode.Meta as CommandMetaData;
+            var t = new SlashCommand(command, meta?.guild_id, meta);
             //t._applicationCommand = command;
             return t;
         }

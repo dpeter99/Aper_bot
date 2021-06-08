@@ -14,7 +14,7 @@ namespace Aper_bot.Modules.DiscordSlash
         
         public void RegisterServices(HostBuilderContext ctx,IServiceCollection services)
         {
-            services.AddTransient<IAsyncInitializer,SlashCommandUpdater>();
+            services.AddTransient<IHostedService,SlashCommandUpdater>();
             services.AddSingleton<SlashCommandExecutor>();
 
             
@@ -22,7 +22,7 @@ namespace Aper_bot.Modules.DiscordSlash
             
 
 
-            services.AddDbContext<SlashDbContext>();
+            services.AddDbContext<SlashDbContext>(ServiceLifetime.Transient);
 
             services.AddScoped<IMigrationContext, MigrationContext<SlashDbContext>>();
         }

@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Reflection;
+using System.Threading;
 using Aper_bot.Database;
 using Aper_bot.EventBus;
 using Aper_bot.Hosting.Database;
@@ -36,6 +38,9 @@ namespace Aper_bot.Hosting
         public APCHost(string[] args)
         {
             Console.WriteLine("Aper Bot is starting up");
+
+            CultureInfo.CurrentCulture = new CultureInfo("en-US");
+            Thread.CurrentThread.CurrentCulture = CultureInfo.CurrentCulture;
             
             static void UnhandledExceptionToConsole(object sender, UnhandledExceptionEventArgs e) =>
                 Console.Error.WriteLine("Unhandled Exception\n" + e.ExceptionObject.ToString());
@@ -59,7 +64,7 @@ namespace Aper_bot.Hosting
             
             AppDomain.CurrentDomain.UnhandledException -= UnhandledExceptionToConsole;
             AppDomain.CurrentDomain.UnhandledException += (sender, e)
-                => _logger.LogCritical((Exception)e.ExceptionObject, "Unhandled Exception");
+                => Log.Logger.Fatal((Exception)e.ExceptionObject, "Unhandled Exception");
         }
         
         public void Init()
@@ -92,7 +97,7 @@ namespace Aper_bot.Hosting
                         outputTemplate:"[{Timestamp:HH:mm:ss} {SourceContext} {Level:u3}] {Message:lj}{NewLine}{Exception}"
                     )
                     .CreateLogger();
-                
+
                 l.AddSerilog();
             });
 
@@ -188,5 +193,7 @@ namespace Aper_bot.Hosting
 
             //services.AddTransient<IHostedService, TestManyServiceProviders>();
         }
+
+
     }
 }

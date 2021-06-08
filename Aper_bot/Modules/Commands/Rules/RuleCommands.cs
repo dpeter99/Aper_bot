@@ -10,6 +10,7 @@ using Aper_bot.Modules.Discord;
 using Aper_bot.Util;
 using DSharpPlus.Entities;
 using Mars;
+using Mars.Arguments;
 using Microsoft.EntityFrameworkCore;
 
 namespace Aper_bot.Modules.Commands.Rules
@@ -17,15 +18,28 @@ namespace Aper_bot.Modules.Commands.Rules
     [CommandProvider]
     class RuleCommands : ChatCommands
     {
-        //IDbContextFactory<DatabaseContext> dbFactory;
-
         public RuleCommands()
         {
-            //dbFactory = fac;
         }
 
         public override IEnumerable<CommandNode> Register()
         {
+            var quote = new LiteralNode("rule",new CommandMetaData(1));
+
+            quote.NextLiteral("add")
+                .NextArgument("text", new LongStringArgument())
+                .ThisCalls(AddRule);
+
+            quote.NextLiteral("remove")
+                .NextArgument("num", new IntArgument());
+
+            quote.NextLiteral("list")
+                .ThisCalls(ListRules);
+
+            quote.NextLiteral("make-sticky-post")
+                .ThisCalls(PlaceRules);
+                
+            
             /*
             return l.Literal("rule")
                 .Then(l => l.Argument("id", Arguments.Integer(min: 0))
@@ -57,9 +71,86 @@ namespace Aper_bot.Modules.Commands.Rules
                     )
                 );
                 */
-            return null;
+            
+            return new[] {quote};
+            
         }
 
+        [CommandPermissionRequired(PermissionLevels.Admin)]
+        [GuildRequiered]
+        private async Task AddRule(ParseResult result, IMessageCreatedEvent messageEvent)
+        {
+            var guild = messageEvent.Guild!;
+
+            var db = messageEvent.Db;
+
+            var rule_count = db.Attach(guild).Collection(g => g.Rules).Query().Count();
+
+            int num = rule_count + 1;
+
+            string text = result.GetStringArg("text");
+            
+            guild.Rules.Add(new GuildRule(num, text));
+            await messageEvent.Db.SaveChangesAsync();
+            
+            await messageEvent.Respond("Added");
+
+            //await UpdateRules(discordMessageEvent);
+        }
+
+        [GuildRequiered]
+        async Task ListRules(ParseResult result, IMessageCreatedEvent messageEvent)
+        {
+            var guild = messageEvent.Guild!;
+
+            messageEvent.Db.Attach(guild);
+            await messageEvent.Db.Entry(guild).Collection(g => g!.Rules).LoadAsync();
+
+
+            var text = RulesText(guild);
+
+            var embed = new DiscordEmbedBuilder()
+            {
+                Description = text
+            };
+
+            await messageEvent.Respond(embed.Build());
+        }
+        
+        private static string RulesText(Guild guild)
+        {
+            var text = "";
+            guild!.Rules.Sort((a, b) => a.Number - b.Number);
+            foreach (var item in guild!.Rules)
+            {
+                text += $"\n\n{DiscordEmoji.FromName(DiscordBot.Instance.Client, $":{item.Number.ToName()}:")} {item.Description}";
+            }
+
+            return text;
+        }
+        
+        [GuildRequiered]
+        async Task PlaceRules(ParseResult result, IMessageCreatedEvent messageEvent)
+        {
+            var guild = messageEvent.Guild!;
+
+            messageEvent.Db.Attach(guild);
+            await messageEvent.Db.Entry(guild).Collection(g => g!.Rules).LoadAsync();
+
+            var text = RulesText(guild);
+
+            var embed = DiscordBot.Instance.BaseEmbed();
+            embed.Title = "Server Rules";
+            embed.Description = text;
+            embed.Author = null;
+
+            var message = await messageEvent.Respond(embed.Build());
+            guild.RulesMessageId = message.Id.ToString();
+            guild.RulesChannelId = message.ChannelId.ToString();
+            
+            await messageEvent.Db.SaveChangesAsync();
+        }
+        
         /*
         private async Task RemoveRule(CommandContext<CommandExecutionContext> context, IMessageCreatedEvent discordMessageEvent)
         {
@@ -93,7 +184,9 @@ namespace Aper_bot.Modules.Commands.Rules
             await UpdateRules(discordMessageEvent);
             return;
         }
-
+        */
+        
+        /*
         async Task SingleRule(CommandContext<CommandExecutionContext> context, IMessageCreatedEvent discordMessageEvent)
         {
             var guild = discordMessageEvent.Guild;
@@ -123,31 +216,12 @@ namespace Aper_bot.Modules.Commands.Rules
 
             await discordMessageEvent.Respond(embed.Build());
         }
-
-        async Task PlaceRules(CommandContext<CommandExecutionContext> context, IMessageCreatedEvent discordMessageEvent)
-        {
-            var guild = discordMessageEvent.Guild;
-            if (discordMessageEvent.Guild == null)
-            {
-                GuildNotSetUp(discordMessageEvent);
-            }
-
-            context.Source.Db.Attach(guild);
-            await context.Source.Db.Entry(guild).Collection(g => g!.Rules).LoadAsync();
-
-            var text = RulesText(guild);
-
-            var embed = DiscordBot.Instance.BaseEmbed();
-            embed.Title = "Server Rules";
-            embed.Description = text;
-            embed.Author = null;
-
-            var message = await discordMessageEvent.Respond(embed.Build());
-            guild.RulesMessageId = message.Id.ToString();
-            guild.RulesChannelId = message.ChannelId.ToString();
-            await context.Source.Db.SaveChangesAsync();
-        }
-
+        */
+        
+        
+        
+        
+        /*
         [CommandPermissionRequired(PermissionLevels.Admin)]
         async Task AddRule(CommandContext<CommandExecutionContext> context, IMessageCreatedEvent discordMessageEvent)
         {
@@ -190,42 +264,6 @@ namespace Aper_bot.Modules.Commands.Rules
         }
 
 
-        async Task ListRules(CommandContext<CommandExecutionContext> context, IMessageCreatedEvent discordMessageEvent)
-        {
-            var guild = discordMessageEvent.Guild;
-            if (guild == null)
-            {
-                GuildNotSetUp(discordMessageEvent);
-                return;
-            }
-
-
-            context.Source.Db.Attach(guild);
-            await context.Source.Db.Entry(guild).Collection(g => g!.Rules).LoadAsync();
-
-
-            var text = RulesText(guild);
-
-            var embed = new DiscordEmbedBuilder()
-            {
-                Description = text
-            };
-
-            await discordMessageEvent.Respond(embed.Build());
-        }
-
-        private static string RulesText(Guild guild)
-        {
-            var text = "";
-            guild!.Rules.Sort((a, b) => a.Number - b.Number);
-            foreach (var item in guild!.Rules)
-            {
-                text +=
-                    $"\n\n{DiscordEmoji.FromName(DiscordBot.Instance.Client, $":{item.Number.ToName()}:")} {item.Description}";
-            }
-
-            return text;
-        }
 
         private async Task UpdateRules(IMessageCreatedEvent messageEvent)
         {

@@ -4,12 +4,13 @@ using System.Threading.Tasks;
 using Aper_bot.Events;
 using Aper_bot.Modules.Discord;
 using Aper_bot.Modules.Discord.Config;
+using Aper_bot.Util.Discord;
 using Microsoft.Extensions.Options;
 
 namespace Aper_bot.Modules.CommandProcessing.Attributes
 {
     [AttributeUsage(AttributeTargets.Method, Inherited = false, AllowMultiple = false)]
-    sealed class CommandPermissionRequired : Attribute, ICommandConditionProvider
+    sealed class CommandPermissionRequired : CommandAttribute
     {
         PermissionLevels _permission;
         
@@ -23,7 +24,7 @@ namespace Aper_bot.Modules.CommandProcessing.Attributes
             this._permission = permission;
         }
 
-        public Type GetCondition(CommandExecutionContext context)
+        public override Type GetCondition()
         {
             return typeof(Condition);
         }
@@ -32,36 +33,40 @@ namespace Aper_bot.Modules.CommandProcessing.Attributes
         public class Condition : CommandCondition
         {
             private readonly IOptions<DiscordConfig> _conf;
+            private readonly DiscordBot _bot;
 
-            public Condition(IOptions<DiscordConfig> conf)
+            public Condition(IOptions<DiscordConfig> conf, DiscordBot bot)
             {
                 _conf = conf;
+                _bot = bot;
             }
             
-            public override async Task<bool> CheckCondition(CommandExecutionContext context, ICommandConditionProvider p)
+            public override async Task<bool> CheckCondition(CommandFunction func, IMessageCreatedEvent context, ICommandConditionProvider provider)
             {
-                var atribute = (CommandPermissionRequired)p;
+                var attribute = (CommandPermissionRequired)provider;
                 
                 var db = context.Db;
             
-                if(context.Event.Guild != null)
+                if(context.Guild is not null)
                 {
-                    db.Entry(context.Event.Guild)
-                        .Collection(g => g.PermissionLevels).LoadAsync().Wait();
+                    db.Entry(context.Guild).Collection(g => g.PermissionLevels).LoadAsync().Wait();
 
-                    var member = await ((DiscordMessageCreatedEvent)context.Event).@event.Guild.GetMemberAsync(ulong.Parse(context.Event.Author.UserID));
+                    //var member = await ((DiscordMessageCreatedEvent)context).@event.Guild.GetMemberAsync(ulong.Parse(context.Author.UserID));
+
+                    var DGuild = await _bot.Client.GetGuildAsync(new Snowflake(context.Guild.GuildID));
+                    
 
                     PermissionLevels memberLevel = PermissionLevels.None;
 
-                    if (member.Id.ToString() == _conf.Value.Owner ||
-                        member.Id.ToString() == ((DiscordMessageCreatedEvent)context.Event).@event.Guild.OwnerId.ToString())
+                    if (context.Author.UserID == _conf.Value.Owner ||
+                        context.Author.UserID == DGuild.OwnerId.ToString())
                     {
                         memberLevel = PermissionLevels.Owner;
                     }
                     
+                    var member = await DGuild.GetMemberAsync(new Snowflake(context.Author.UserID));
                     
-                
-                    foreach (var guildLevel in context.Event.Guild.PermissionLevels)
+                    foreach (var guildLevel in context.Guild.PermissionLevels)
                     {
                         if (member.Roles.Any(r => r.Id.ToString() == guildLevel.RoleID))
                         {
@@ -72,9 +77,9 @@ namespace Aper_bot.Modules.CommandProcessing.Attributes
                         }
                     }
 
-                    if (atribute._permission > memberLevel)
+                    if (attribute._permission > memberLevel)
                     {
-                        context.Event.RespondError($"You do not have the needed permissions. \n You must be {atribute._permission.ToString()} or above");
+                        context.RespondError($"You do not have the needed permissions. \n You must be {attribute._permission.ToString()} or above");
                         return false;
                     }
 

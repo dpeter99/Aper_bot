@@ -7,8 +7,10 @@ using System.Threading.Tasks;
 using Aper_bot.Database;
 using Aper_bot.Modules.CommandProcessing;
 using Aper_bot.Modules.CommandProcessing.Commands;
+using Aper_bot.Modules.CommandProcessing.CommandTree;
 using Aper_bot.Modules.DiscordSlash.Entities;
 using Aper_bot.Util;
+using Aper_bot.Util.Discord;
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands.Entities;
 using Mars;
@@ -21,15 +23,14 @@ namespace Aper_bot.Modules.DiscordSlash
 {
     public class SlashCommandExecutor
     {
-        private ICommandProcessor tree;
+        private ICommandGraph _tree;
+        private readonly ICommandExecutor _executor;
 
-        //readonly IDbContextFactory<CoreDatabaseContext> dbContextFactory;
-        
-        public SlashCommandExecutor(ICommandProcessor tree,IServiceProvider services /*IDbContextFactory<CoreDatabaseContext> fac*/)
+        public SlashCommandExecutor(ICommandGraph tree, ICommandExecutor executor, IServiceProvider services)
         {
-            this.tree = tree;
+            _tree = tree;
+            _executor = executor;
             Services = services;
-            //this.dbContextFactory = fac;
         }
         
         public IServiceProvider Services { get; }
@@ -38,6 +39,8 @@ namespace Aper_bot.Modules.DiscordSlash
         public async Task<object?> HandleWebhookPost(string raw)
         {
             var i = JsonConvert.DeserializeObject<Interaction>(raw);
+            if (i is null)
+                return null;
 
             var jobj = JObject.Parse(raw);
             DiscordUser? user = jobj["member"]?["user"]?.ToObject<DiscordUser>();
@@ -49,17 +52,18 @@ namespace Aper_bot.Modules.DiscordSlash
             using (var scope = Services.CreateScope())
             {
                 var dbContext = scope.ServiceProvider.GetRequiredService<CoreDatabaseContext>();
-                var messageEvent = new SlashMessageEvent(i, dbContext);
+                var messageEvent = new SlashMessageEvent(i, dbContext, new Snowflake(i.Id));
 
 
                 var res = Parse(i.Data);
 
                 if (res.Callback is not null)
                 {
-                    //messageEvent.Respond("WELL well");
+                    
                     if (res.Callback is CommandFunction func)
                     {
-                        func.Cmd(res, messageEvent);
+                        //func.Cmd(res, messageEvent);
+                        await _executor.RunCommand(res, messageEvent);
                     }
                 }
                 else
@@ -74,7 +78,7 @@ namespace Aper_bot.Modules.DiscordSlash
 
         ParseResult Parse(ApplicationCommandInteractionData? interactionData)
         {
-            var root = tree.tree.GetRoot();
+            var root = _tree.tree.GetRoot();
 
             var res = new ParseResult();
 
@@ -191,7 +195,7 @@ namespace Aper_bot.Modules.DiscordSlash
                         if (child.CanParse(content))
                         {
                             child.ParseSingleToken(content, parseResult);
-                            if (option.Options is not null)
+                            if (option.Options is not null || true)
                             {
                                 ParseNew(child, option.Options, parseResult);
                             }
