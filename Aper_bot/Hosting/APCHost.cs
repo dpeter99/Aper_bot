@@ -163,7 +163,7 @@ namespace Aper_bot.Hosting
 
         private void RegisterDefaultServices(HostBuilderContext ctx, IServiceCollection services)
         {
-            //services.AddAsyncInitialization();
+            services.AddAsyncInitialization();
             
             services.AddSingleton(Log.Logger);
             services.AddSingleton<IEventBus>(new EventBus.EventBus());
@@ -180,10 +180,13 @@ namespace Aper_bot.Hosting
             //services.AddSingleton<DatabaseContextProvider>();
             //services.AddDbContextFactory<CoreDatabaseContext,DatabaseContextProvider>(lifetime: ServiceLifetime.Singleton);
             //services.AddDbContextFactory<CoreDatabaseContext>();
+
             services.AddDbContext<CoreDatabaseContext>();
             services.AddTransient<IMigrationContext,MigrationContext<CoreDatabaseContext>>();
 
             services.AddHttpClient();
+
+            //services.AddTransient<IHostedService, TestManyServiceProviders>();
         }
     }
 }

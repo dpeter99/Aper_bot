@@ -15,19 +15,27 @@ namespace Aper_bot.Hosting.Database
         public DatabaseContext(string schema, IOptions<DatabaseSettings> options) : base(schema)
         {
             _options = options;
+            
         }
         
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            var connectionString = $"server={_options.Value.Address};port=3306;user={_options.Value.User};password={_options.Value.Password};database={_options.Value.Database_Name}";
+            if (!optionsBuilder.IsConfigured)
+            {
+                var connectionString =
+                    $"server={_options.Value.Address};port=3306;user={_options.Value.User};password={_options.Value.Password};database={_options.Value.Database_Name}";
+                    
 
-            optionsBuilder.UseMySql(
+                optionsBuilder.UseMySql(
                     connectionString,
                     MariaDbServerVersion.Parse("10.4.12-MariaDB-1:10.4.12+maria~bionic"),
-                    MysqlOptions)
-                .EnableSensitiveDataLogging()
-                .EnableDetailedErrors();
+                    MysqlOptions);
+
+                //.EnableSensitiveDataLogging()
+                //.EnableDetailedErrors();
+            }
         }
+        
         
         void MysqlOptions(MySqlDbContextOptionsBuilder options)
         {
@@ -36,7 +44,7 @@ namespace Aper_bot.Hosting.Database
             options.MigrationsHistoryTable(Translator(_schema, HistoryRepository.DefaultTableName));
         }
 
-        private string Translator(string schemaname, string objectname)
+        private static string Translator(string schemaname, string objectname)
         {
             return $"{schemaname}.{objectname}";
         }
