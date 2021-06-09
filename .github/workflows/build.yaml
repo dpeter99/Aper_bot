@@ -20,7 +20,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - id: lovercase_name
+      - name: Lovercase name
+        id: string
         uses: ASzc/change-string-case-action@v1
         with:
           string: ${{ github.repository }}
