@@ -51,14 +51,11 @@ namespace Aper_bot.Modules.Discord
         ILogger<DiscordBot> Log;
         private readonly IEventBus _eventBus;
 
-        //private readonly ICommandExecutor _commandExecutor;
-        
 
         public IServiceProvider Services { get; }
         
         public DiscordBot(
             ILogger<DiscordBot> logger,
-            //ICommandExecutor commandExecutor,
             IEventBus eventBus,
             IOptions<DiscordConfig> configuration,
             IServiceProvider services,
@@ -67,8 +64,7 @@ namespace Aper_bot.Modules.Discord
 
             Log = logger;
             _eventBus = eventBus;
-            //_commandExecutor = commandExecutor;
-            
+
             Services = services;
 
             var loggerFactory = LoggerFactory.Create(builder =>
