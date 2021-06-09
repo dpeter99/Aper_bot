@@ -51,7 +51,8 @@ namespace Aper_bot.Database.Model
                 
                 builder
                     .Property(x => x.GuildID)
-                    .HasConversion(Snowflake.GetConverter());
+                    .HasConversion(Snowflake.GetConverter())
+                    .IsRequired();
             }
         }
         
