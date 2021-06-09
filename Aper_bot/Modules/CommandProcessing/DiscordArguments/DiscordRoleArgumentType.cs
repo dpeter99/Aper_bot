@@ -4,15 +4,14 @@ using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Aper_bot.Events;
 using Aper_bot.Modules.Discord;
-using Aper_bot.Util;
-using Brigadier.NET;
-using Brigadier.NET.Exceptions;
 using DSharpPlus.Entities;
 using Microsoft.Extensions.Options;
 
 namespace Aper_bot.Modules.CommandProcessing.DiscordArguments
 {
+    /*
     class DiscordRoleArgumentType : AsyncArgument<DiscordRole>
     {
         private static readonly IEnumerable<string> UserExamples = new[] { "@username", "794664673487749131", "..." };
@@ -29,10 +28,10 @@ namespace Aper_bot.Modules.CommandProcessing.DiscordArguments
 
         DiscordBot discord;
 
-        public DiscordRoleArgumentType(DiscordBot bot, IOptions<Config> conf)
+        public DiscordRoleArgumentType(IOptions<Config> conf)
         {
             config = conf.Value;
-            discord = bot;
+            discord = DiscordBot.Instance;
         }
 
 
@@ -41,15 +40,15 @@ namespace Aper_bot.Modules.CommandProcessing.DiscordArguments
                 return "DiscordUser()";   
         }
 
-        public async override Task<DiscordRole> Process<TSource>(IStringReader reader, TSource source)
+        public async override Task<DiscordRole> Process<TSource>(ref string reader, TSource source)
         {
             var prew_cursor = reader.Cursor;
 
             string token = reader.ReadTillSpace();
 
-            if (source is CommandArguments arguments)
+            if (source is CommandExecutionContext arguments)
             {
-                var ctx = arguments.Event.@event;
+                var ctx = ((DiscordMessageCreatedEvent)arguments.Event).@event;
 
                 if (ctx.Guild == null)
                     throw new DynamicCommandExceptionType(value => new LiteralMessage($"Invalid role '{value}'")).CreateWithContext(reader, token);
@@ -88,9 +87,10 @@ namespace Aper_bot.Modules.CommandProcessing.DiscordArguments
                 return rol;
             }
             
-            throw new Exception($"This can only work with a {typeof(CommandArguments)} TSource");
+            throw new Exception($"This can only work with a {typeof(CommandExecutionContext)} TSource");
         }
 
         public override IEnumerable<string> Examples => UserExamples;
     }
+    */
 }

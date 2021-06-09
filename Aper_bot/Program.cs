@@ -15,11 +15,8 @@ namespace Aper_bot
 {
     static class Program
     {
-
         static void Main(string[] args)
         {
-
-            
             IApplicationHost app = new APCHost(args);
             app.Init();
             app.Run();

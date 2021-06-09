@@ -7,19 +7,21 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Aper_bot.Hosting;
 
 namespace Aper_bot.Database
 {
-    class DesignDatabaseFactory : IDesignTimeDbContextFactory<DatabaseContext>
+    class DesignDatabaseFactory : IDesignTimeDbContextFactory<CoreDatabaseContext>
     {
-        public DatabaseContext CreateDbContext(string[] args)
+        public CoreDatabaseContext CreateDbContext(string[] args)
         {
-            var app = new Application(args);
+            var app = new APCHost(args);
+            app.Init();
 
-            var ctx = app.host.Services.GetService<IDbContextFactory<DatabaseContext>>();
+            var ctx = app.Services?.GetRequiredService<CoreDatabaseContext>();
             if(ctx != null)
             {
-                return ctx.CreateDbContext();
+                return ctx;
             }
             throw new Exception("Coudn't make Aper bot ctx");
         }

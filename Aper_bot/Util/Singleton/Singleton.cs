@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Aper_bot.Modules.Discord;
-
-namespace Aper_bot.Util
+﻿namespace Aper_bot.Util.Singleton
 {
     public class Singleton<T> where T : Singleton<T>
     {
@@ -15,14 +8,14 @@ namespace Aper_bot.Util
             get
             {
                 if (_instance == null)
-                    throw new SingletonNotInstantiated(typeof(Application));
+                    throw new SingletonNotInstantiated(typeof(T));
                 return _instance;
             }
 
             internal set
             {
                 if (_instance != null)
-                    throw new SingletonMultipleInstanceException(typeof(DiscordBot));
+                    throw new SingletonMultipleInstanceException(typeof(T));
                 _instance = value;
             }
         }

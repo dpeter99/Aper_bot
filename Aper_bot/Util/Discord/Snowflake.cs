@@ -1,11 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
-namespace Aper_bot.Util
+namespace Aper_bot.Util.Discord
 {
     public struct Snowflake
     {
@@ -15,8 +11,15 @@ namespace Aper_bot.Util
         {
             id = i;
         }
+        
+        public Snowflake(string i)
+        {
+            id = ulong.Parse(i);
+        }
 
         public static implicit operator ulong(Snowflake d) => d.id;
+        public static implicit operator ulong?(Nullable<Snowflake> d) => d?.id;
+
         public static implicit operator Snowflake(ulong d) => new Snowflake(d);
         
         public static implicit operator long(Snowflake d)
@@ -37,16 +40,17 @@ namespace Aper_bot.Util
         }
 
         
-        public static implicit operator Snowflake(string d) => new Snowflake(ulong.Parse(d));
+        public static implicit operator Snowflake(string d) => new (ulong.Parse(d));
+        
+
 
         public override string ToString()
         {
             return id.ToString();
         }
 
-        public static ValueConverter GetConverter() => new ValueConverter<Snowflake, long>(
-            v => v,
-            v => v);
+        public static ValueConverter GetConverter() => new ValueConverter<Snowflake, long>(v => v, v => v);
+        
 
     }
 }

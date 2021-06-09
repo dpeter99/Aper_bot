@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 
 namespace Aper_bot.Database.Model
 {
+    [Table("Quotes", Schema = CoreDatabaseContext.Schema)]
     public class Quote : Entity
     {
 
@@ -94,7 +95,7 @@ namespace Aper_bot.Database.Model
         {
             get
             {
-                return _source?.Name ?? "Anonimus";
+                return _source?.Name ?? "Anonymous";
             }
         }
     }

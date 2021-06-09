@@ -2,13 +2,19 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Aper_bot.Database;
+using Aper_bot.Database.Model;
 using Aper_bot.EventBus;
 using Aper_bot.Events;
+using Aper_bot.Modules.CommandProcessing.Commands;
+using Aper_bot.Modules.Discord.Config;
 using Aper_bot.Util;
+using Aper_bot.Util.Singleton;
+using Certes.Acme.Resource;
 using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -16,23 +22,57 @@ using ILogger = Serilog.ILogger;
 
 namespace Aper_bot.Modules.Discord
 {
-    public class DiscordBot : Singleton<DiscordBot>, IHostedService
+    public class DiscordBotStarter : IHostedService
+    {
+        private readonly DiscordBot _bot;
+
+        public DiscordBotStarter(DiscordBot bot)
+        {
+            _bot = bot;
+        }
+
+        public Task StartAsync(CancellationToken cancellationToken)
+        {
+            return _bot.Client.ConnectAsync();
+        }
+
+        public Task StopAsync(CancellationToken cancellationToken)
+        {
+            return _bot.Client.DisconnectAsync();
+        }
+    }
+    
+    public class DiscordBot : Singleton<DiscordBot>
     {
 
         public DiscordClient Client { get; private set; }
-        //public DiscordSlashClient SlashClient { get; private set; }
+        
 
         ILogger<DiscordBot> Log;
-        readonly IEventBus eventBus;
+        private readonly IEventBus _eventBus;
 
-        readonly IDbContextFactory<DatabaseContext> dbContextFactory;
 
-        public DiscordBot(ILogger<DiscordBot> logger, IEventBus bus, IOptions<Config> configuration, IDbContextFactory<DatabaseContext> fac, ILoggerFactory loggerFactory)
+        public IServiceProvider Services { get; }
+        
+        public DiscordBot(
+            ILogger<DiscordBot> logger,
+            IEventBus eventBus,
+            IOptions<DiscordConfig> configuration,
+            IServiceProvider services,
+            ILoggerProvider loggerProvider)
         {
 
             Log = logger;
-            eventBus = bus;
-            dbContextFactory = fac;
+            _eventBus = eventBus;
+
+            Services = services;
+
+            var loggerFactory = LoggerFactory.Create(builder =>
+            {
+                builder.AddProvider(loggerProvider);
+                builder.SetMinimumLevel(LogLevel.Critical);
+                
+            });
 
             DiscordConfiguration config = new DiscordConfiguration
             {
@@ -47,8 +87,9 @@ namespace Aper_bot.Modules.Discord
             Client.MessageCreated += NewMessage;
             Client.UnknownEvent += (sender, args) =>
             {
-                logger.LogDebug("asd");
+                //logger.LogDebug("asd");
                 args.Handled = true;
+
                 return Task.CompletedTask; 
             };
             
@@ -69,10 +110,28 @@ namespace Aper_bot.Modules.Discord
 
         Task NewMessage(DiscordClient discordClient,MessageCreateEventArgs messageCreateArgs)
         {
-            var new_event = new MessageCreatedEvent(messageCreateArgs,dbContextFactory.CreateDbContext());
+            using (var scope = Services.CreateScope())
+            {
+                var dbContext = scope.ServiceProvider.GetRequiredService<CoreDatabaseContext>();
 
-            _ = eventBus.PostEventAsync(new_event);
+                if (messageCreateArgs.Guild != null && dbContext.GetGuildFor(messageCreateArgs.Guild.Id) is null)
+                {
+                    var discordGuild = messageCreateArgs.Guild;
+                    
+                    Log.LogInformation("Registering guild: {GuildID}",discordGuild.Id);
 
+                    dbContext.Add(new Guild(discordGuild.Name, discordGuild.Id.ToString()));
+                    dbContext.SaveChanges();
+                }
+                
+                var new_event = new DiscordMessageCreatedEvent(messageCreateArgs,dbContext);
+
+                //_commandExecutor.ProcessMessage(new_event);
+                _eventBus.PostEvent(new_event);
+                
+                
+            }
+            
             return Task.CompletedTask;
         }
 
@@ -83,7 +142,7 @@ namespace Aper_bot.Modules.Discord
             return new DiscordEmbedBuilder()
             {
                 Author = new DiscordEmbedBuilder.EmbedAuthor() {Name = "Aper_bot"},
-                Timestamp = DateTimeOffset.Now
+                Timestamp = DateTimeOffset.Now,
             };
         }
     }

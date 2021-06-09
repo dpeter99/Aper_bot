@@ -6,58 +6,39 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Aper_bot.Modules.Discord;
 using Aper_bot.Util;
-using Brigadier.NET;
-using Brigadier.NET.ArgumentTypes;
-using Brigadier.NET.Exceptions;
 using DSharpPlus.Entities;
+using Mars;
 using Microsoft.Extensions.Options;
 
 namespace Aper_bot.Modules.CommandProcessing.DiscordArguments
 {
-    class DiscordUserArgumentType : ArgumentType<DiscordUser>
+    
+    class DiscordUserArgumentType : AsyncArgument<DiscordUser>
     {
         private static readonly IEnumerable<string> UserExamples = new[] { "@username", "794664673487749131", "..." };
 
-        private static Regex UserRegex { get; }
+        private static Regex UserRegex { get; } = new (@"^<@\!?(\d+?)>$", RegexOptions.ECMAScript | RegexOptions.Compiled);
 
         Config config;
 
-        static DiscordUserArgumentType()
-        {
-            UserRegex = new Regex(@"^<@\!?(\d+?)>$", RegexOptions.ECMAScript | RegexOptions.Compiled);
-        }
-
         DiscordBot discord;
 
-        public DiscordUserArgumentType(DiscordBot bot, IOptions<Config> conf)
+        public DiscordUserArgumentType(IOptions<Config> conf)
         {
             config = conf.Value;
-            discord = bot;
+            discord = DiscordBot.Instance;
         }
 
-        public override DiscordUser Parse(IStringReader reader)
+        public override bool CanParse(string text)
         {
-            Task<DiscordUser>? task;
-
-            task = Process(reader);
-
-            try
-            {
-                task.Wait();
-            }
-            catch (AggregateException e)
-            {
-                throw e.InnerException ?? e;
-            }
-
-            return task.Result;
+            var token = text.Split(' ', 2)[0];
+            return ulong.TryParse(token, NumberStyles.Integer, CultureInfo.InvariantCulture, out var uid) ||
+                   UserRegex.Match(token).Success;
         }
-
-
-        public async Task<DiscordUser> Process(IStringReader reader)
+        
+        public override async Task<DiscordUser> Process(StringReader text, ParseResult r)
         {
-            //reader.SkipWhitespace();
-            string token = reader.ReadTillSpace();
+            var token = text.GetNextToken();
 
             if (ulong.TryParse(token, NumberStyles.Integer, CultureInfo.InvariantCulture, out var uid))
             {
@@ -65,8 +46,10 @@ namespace Aper_bot.Modules.CommandProcessing.DiscordArguments
 
                 if (result == null)
                 {
-                    throw new DynamicCommandExceptionType(value => new LiteralMessage($"Invalid user '{value}'")).CreateWithContext(reader, token);
+                    throw new Exception($"Invalid user '{token}'");
                 }
+
+                text.PopNextToken();
                 return result;
             }
 
@@ -76,8 +59,10 @@ namespace Aper_bot.Modules.CommandProcessing.DiscordArguments
                 var result = await discord.Client.GetUserAsync(uid).ConfigureAwait(false);
                 if (result == null)
                 {
-                    throw new DynamicCommandExceptionType(value => new LiteralMessage($"Invalid user '{value}'")).CreateWithContext(reader, token);
+                    throw new Exception($"Invalid user '{token}'");
                 }
+                
+                text.PopNextToken();
                 return result;
             }
 
@@ -98,11 +83,12 @@ namespace Aper_bot.Modules.CommandProcessing.DiscordArguments
 
             if(usr == null)
             {
-                throw new DynamicCommandExceptionType(value => new LiteralMessage($"Invalid user '{value}'")).CreateWithContext(reader, token);
+                throw new Exception($"Invalid user '{token}'");
             }
+            text.PopNextToken();
             return usr;
 
-            throw new SimpleCommandExceptionType(new LiteralMessage("Expected user")).CreateWithContext(reader);
+            throw new Exception($"Invalid user '{token}'");
         }
 
         public override string ToString()
@@ -110,6 +96,8 @@ namespace Aper_bot.Modules.CommandProcessing.DiscordArguments
                 return "DiscordUser()";   
         }
 
-        public override IEnumerable<string> Examples => UserExamples;
+        //public override IEnumerable<string> Examples => UserExamples;
+
     }
+    
 }
