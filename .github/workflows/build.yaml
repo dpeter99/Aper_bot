@@ -11,6 +11,9 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+  release:
+    types: 
+      - published
 jobs:
   test:
 
@@ -43,7 +46,7 @@ jobs:
   
   publish:
     runs-on: ubuntu-latest
-    if: github.event_name == 'tag'
+    if: github.event_name == 'release'
 
     steps:
       - name: Check out the repo
