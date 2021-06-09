@@ -171,25 +171,21 @@ namespace Aper_bot.Modules.Commands
             var guild = context.Guild;
             if (guild != null)
             {
-                //var discordGuild = await DiscordBot.Instance.Client.GetGuildAsync(ulong.Parse(guild.GuildID));
+                var discordGuildAsync = DiscordBot.Instance.Client.GetGuildAsync(guild.GuildID);
                 
                 string text = "";
                 
                 var q = from h in db.Quotes.Include(blog => blog.Source)
                         where h.Guild == guild
                         select h;
-                
-                
 
-                //text = q.Aggregate(new StringBuilder(), ((builder, quote) => builder.Append(quote.Text))).ToString();
-                
-                
                 foreach (var quote in q)
                 {
                     if (quote.Source != null)
                     {
-                        //var sourceMember = await discordGuild.GetMemberAsync(ulong.Parse(quote.Source.UserID));
-                        var sourceMember = quote.Source.Name;
+                        var discordGuild = await discordGuildAsync;
+                        var sourceMember = (await discordGuild.GetMemberAsync(ulong.Parse(quote.Source.UserID))).Nickname;
+                        //var sourceMember = quote.Source.Name;
                     
                         text += $"\n{EmojiHelper.Number(quote.number)} *{quote.Text}* - by {sourceMember}";
                     }
@@ -198,29 +194,6 @@ namespace Aper_bot.Modules.Commands
                         text += $"\n{EmojiHelper.Number(quote.number)} *{quote.Text}* - by *Anonymous*";
                     }
                 }
-                
-                
-                //await db.Entry(guild).Collection(g => g!.Quotes).LoadAsync();
-                
-                
-                
-                /*
-                foreach (var item in guild.Quotes)
-                {
-                    await db.Entry(item).Reference(r => r.Source).LoadAsync();
-
-                    if (item.Source != null)
-                    {
-                        var sourceMember = await discordGuild.GetMemberAsync(ulong.Parse(item.Source.UserID));
-                    
-                        text += $"\n{EmojiHelper.Number(item.number)} *{item.Text}* - by {sourceMember.Nickname}";
-                    }
-                    else
-                    {
-                        text += $"\n{EmojiHelper.Number(item.number)} *{item.Text}* - by *Anonymous*";
-                    }
-                }
-                */
 
                 var embed = DiscordBot.Instance.BaseEmbed();
                 embed.Title = "Qotes";
