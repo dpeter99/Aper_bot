@@ -20,12 +20,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - id: Lovercase name
+      - id: lovercase_name
         uses: ASzc/change-string-case-action@v1
         with:
           string: ${{ github.repository }}
 
-      - name: PrepareReg Names
+      - name: preparereg_Names
         run: |
           DOCKER_IMAGE=AnderssonPeter/test-actions
           echo IMAGE_REPOSITORY=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]') >> $GITHUB_ENV
