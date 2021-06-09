@@ -20,25 +20,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Lovercase name
-        id: string
-        uses: ASzc/change-string-case-action@v1
-        with:
-          string: ${{ github.repository }}
-
-      - name: preparereg_Names
-        run: |
-          DOCKER_IMAGE=AnderssonPeter/test-actions
-          echo IMAGE_REPOSITORY=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]') >> $GITHUB_ENV
-          echo IMAGE_TAG=$(echo ${{ github.ref }} | tr '[:upper:]' '[:lower:]' | awk '{split($0,a,"/"); print a[3]}') >> $GITHUB_ENV
-          echo ::set-output name=version::${VERSION}
-
-      - name: Echo Info
-        run: |
-          echo $GITHUB_ENV
-          echo ${{ github.repository }}
-          echo ${{ steps.string.outputs.lowercase }}
-
       - uses: actions/checkout@v2
     
       - uses: actions/cache@v2
@@ -73,6 +54,26 @@ jobs:
       - name: Check out the repo
         uses: actions/checkout@v2
 
+      - name: Lovercase name
+        id: string
+        uses: ASzc/change-string-case-action@v1
+        with:
+          string: ${{ github.repository }}
+
+      - name: preparereg_Names
+        run: |
+          DOCKER_IMAGE=AnderssonPeter/test-actions
+          echo IMAGE_REPOSITORY=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]') >> $GITHUB_ENV
+          echo IMAGE_TAG=$(echo ${{ github.ref }} | tr '[:upper:]' '[:lower:]' | awk '{split($0,a,"/"); print a[3]}') >> $GITHUB_ENV
+          echo ::set-output name=version::${VERSION}
+
+      - name: Echo Info
+        run: |
+          echo $GITHUB_ENV
+          echo $IMAGE_REPOSITORY
+          echo ${{ github.repository }}
+          echo ${{ steps.string.outputs.lowercase }}
+
       - name: Log in to GitHub Docker Registry
         uses: docker/login-action@v1
         with:
@@ -85,5 +86,5 @@ jobs:
         with:
           push: true
           tags: |
-            docker.pkg.github.com/${{ github.repository }}/octo-image:${{ github.sha }}
-            docker.pkg.github.com/${{ github.repository }}/octo-image:${{ github.ref }}      
+            docker.pkg.github.com/${{ steps.string.outputs.lowercase }}/octo-image:${{ github.sha }}
+            docker.pkg.github.com/${{ steps.string.outputs.lowercase }}/octo-image:${{ github.ref }}      
