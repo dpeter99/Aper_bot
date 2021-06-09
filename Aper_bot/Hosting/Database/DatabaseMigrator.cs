@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Extensions.Hosting.AsyncInitialization;
 using Microsoft.EntityFrameworkCore;
@@ -31,7 +32,14 @@ namespace Aper_bot.Hosting.Database
             foreach (var migrationContext in _migrationContexts)
             {
                 _logger.LogInformation("Migrating: {Database}", migrationContext.GetContext().GetType().Name);
-                await migrationContext.GetContext().Database.MigrateAsync();
+                try
+                {
+                    await migrationContext.GetContext().Database.MigrateAsync();
+                }
+                catch (Exception e)
+                {
+                    _logger.LogError(e,"There was an exception while auto migrating the database for {DbName}!", migrationContext.GetContext().GetType().Name);
+                }
             }
         }
     }

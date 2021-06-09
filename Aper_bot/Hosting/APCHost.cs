@@ -77,17 +77,18 @@ namespace Aper_bot.Hosting
                 "{Modules}",
                 String.Join("\n",_modules.Select(m => m.Key)));
             
-            var config = new ConfigurationBuilder()  
+            var config_builder = new ConfigurationBuilder()  
                 .SetBasePath(Directory.GetCurrentDirectory())  
-                .AddJsonFile("appsettings.json", optional: false)  
-                .Build();
+                .AddJsonFile("appsettings.json", optional: false);
+
+            var config = config_builder.Build();
             
             //Build the Host
             var builder = Host.CreateDefaultBuilder(_args);
 
             builder.ConfigureAppConfiguration(Settings);
 
-            if (_modules.Any(m => m.Value.IsAspRequiered()))
+            if (_modules.Any(m => m.Value.IsAspRequired()))
                 builder.ConfigureWebHost(b=>WebHostConfig(b,config));
             
             
@@ -150,7 +151,7 @@ namespace Aper_bot.Hosting
         {
             if(env.HostingEnvironment.IsDevelopment() || env.HostingEnvironment.EnvironmentName == "Design")
             {
-                arg2.AddUserSecrets<APCHost>();
+                arg2.AddUserSecrets<APCHost>(optional:true, reloadOnChange:true);
             }
         }
         
@@ -186,6 +187,9 @@ namespace Aper_bot.Hosting
         private void RegisterDefaultServices(HostBuilderContext ctx, IServiceCollection services)
         {
             services.AddAsyncInitialization();
+
+            services.AddHealthChecks()
+                .AddDbContextCheck<CoreDatabaseContext>();;
             
             services.AddSingleton(Log.Logger);
             services.AddSingleton<IEventBus>(new EventBus.EventBus());

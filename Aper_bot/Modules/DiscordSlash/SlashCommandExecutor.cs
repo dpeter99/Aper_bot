@@ -5,10 +5,12 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Aper_bot.Database;
+using Aper_bot.Database.Model;
 using Aper_bot.EventBus;
 using Aper_bot.Modules.CommandProcessing;
 using Aper_bot.Modules.CommandProcessing.Commands;
 using Aper_bot.Modules.CommandProcessing.CommandTree;
+using Aper_bot.Modules.Discord;
 using Aper_bot.Modules.DiscordSlash.Entities;
 using Aper_bot.Util;
 using Aper_bot.Util.Discord;
@@ -17,6 +19,7 @@ using DSharpPlus.SlashCommands.Entities;
 using Mars;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -27,12 +30,14 @@ namespace Aper_bot.Modules.DiscordSlash
         private ICommandGraph _tree;
         private readonly ICommandExecutor _executor;
         private readonly IEventBus _eventBus;
+        private readonly ILogger<SlashCommandExecutor> _logger;
 
-        public SlashCommandExecutor(ICommandGraph tree, ICommandExecutor executor, IServiceProvider services, IEventBus eventBus, SlashCommandWebhooks webhooks)
+        public SlashCommandExecutor(ICommandGraph tree, ICommandExecutor executor, IServiceProvider services, IEventBus eventBus, SlashCommandWebhooks webhooks, ILogger<SlashCommandExecutor> logger)
         {
             _tree = tree;
             _executor = executor;
             _eventBus = eventBus;
+            _logger = logger;
             Services = services;
         }
         
@@ -73,8 +78,20 @@ namespace Aper_bot.Modules.DiscordSlash
             using (var scope = Services.CreateScope())
             {
                 var dbContext = scope.ServiceProvider.GetRequiredService<CoreDatabaseContext>();
+                
+                if (i?.GuildId != null && dbContext.GetGuildFor(i.GuildId) is null)
+                { 
+                    var discordGuild = await DiscordBot.Instance.Client.GetGuildAsync(i.GuildId);
+                    
+                     _logger.LogInformation("Registering guild: {GuildID}",discordGuild.Id);
+
+                    dbContext.Add(new Guild(discordGuild.Name, discordGuild.Id.ToString()));
+                    dbContext.SaveChanges();
+                }
+                
                 var messageEvent = new SlashMessageEvent(i, dbContext);
 
+                
 
                 var res = Parse(i.Data);
 

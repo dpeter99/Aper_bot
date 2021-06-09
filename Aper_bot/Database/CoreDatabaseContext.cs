@@ -77,7 +77,7 @@ namespace Aper_bot.Database
 
             return guild;
         }
-        
+
         public Guild? GetGuildFor(Snowflake discordGuildId)
         {
             var guild = (from u in Guilds

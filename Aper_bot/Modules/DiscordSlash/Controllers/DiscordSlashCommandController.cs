@@ -19,6 +19,9 @@ namespace Aper_bot.Modules.DiscordSlash.Controllers
 {
     [Route("api/discordslash")]
     [ApiController]
+    
+    //[ApiVersion("1.0")]
+    [ApiVersionNeutral]
     public class DiscordSlashCommandController : ControllerBase
     {
         private readonly ILogger _logger;
@@ -30,9 +33,9 @@ namespace Aper_bot.Modules.DiscordSlash.Controllers
             _slashModule = slashModule;
         }
         
-        [HttpPost("")]
-        //[ApiExplorerSettings(IgnoreApi = true)]
+        [HttpPost]
         [ServiceFilter(typeof(DiscordValidationFilter))]
+        //[ApiExplorerSettings(IgnoreApi = true)]
         public async Task<IActionResult> DiscordEndpointHandler()
         {
             using var reader = new StreamReader(Request.Body);

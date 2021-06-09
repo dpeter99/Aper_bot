@@ -29,7 +29,7 @@ namespace Aper_bot.Modules.DiscordSlash
             services.AddScoped<IMigrationContext, MigrationContext<SlashDbContext>>();
         }
 
-        public bool IsAspRequiered()
+        public bool IsAspRequired()
         {
             return true;
         }

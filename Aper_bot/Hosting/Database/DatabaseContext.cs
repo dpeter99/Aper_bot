@@ -37,7 +37,8 @@ namespace Aper_bot.Hosting.Database
                     MariaDbServerVersion.Parse("10.4.12-MariaDB-1:10.4.12+maria~bionic"),
                     MysqlOptions)
                     .UseLoggerFactory(_loggerFactory)
-                    .EnableDetailedErrors();
+                    .EnableDetailedErrors()
+                    ;
 
                 if (_env.IsDevelopment())
                 {
@@ -53,8 +54,8 @@ namespace Aper_bot.Hosting.Database
             //options.CharSetBehavior(CharSetBehavior.NeverAppend);
             options.SchemaBehavior(MySqlSchemaBehavior.Translate, Translator);
             options.MigrationsHistoryTable(Translator(_schema, HistoryRepository.DefaultTableName));
-            
-            
+
+            options.EnableRetryOnFailure(10);
         }
 
         private static string Translator(string schemaname, string objectname)

@@ -43,14 +43,14 @@ namespace Aper_bot.Util.Discord
         public static implicit operator Snowflake(string d) => new (ulong.Parse(d));
         
 
+
         public override string ToString()
         {
             return id.ToString();
         }
 
-        public static ValueConverter GetConverter() => new ValueConverter<Snowflake, long>(
-            v => v,
-            v => v);
+        public static ValueConverter GetConverter() => new ValueConverter<Snowflake, long>(v => v, v => v);
+        
 
     }
 }

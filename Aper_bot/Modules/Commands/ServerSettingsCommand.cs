@@ -33,6 +33,11 @@ namespace Aper_bot.Modules.Commands
 
         public override IEnumerable<CommandNode> Register()
         {
+            var quote = new LiteralNode("server",new CommandMetaData(1));
+
+            quote.NextLiteral("setup")
+                .ThisCalls(ServerSetup);
+            
             /*
             return l.Literal("server")
                 .Then(s =>
@@ -60,19 +65,19 @@ namespace Aper_bot.Modules.Commands
             return null;
         }
 
-        /*
+        
         
         [CommandPermissionRequired(PermissionLevels.Owner)]
-        private async Task ServerSetup(CommandContext<CommandExecutionContext> ctx, IMessageCreatedEvent messageEvent)
+        private async Task ServerSetup(ParseResult result, IMessageCreatedEvent context)
         {
             
-            if (messageEvent.Guild != null)
+            if (context.Guild != null)
             {
-                await messageEvent.Respond("Server already active");
+                await context.Respond("Server already active");
                 return;
             }
 
-            if (messageEvent is DiscordMessageCreatedEvent dmce)
+            if (context is DiscordMessageCreatedEvent dmce)
             {
                 var message = dmce.@event;
 
@@ -84,11 +89,9 @@ namespace Aper_bot.Modules.Commands
                 var permissions = member.PermissionsIn(message.Message.Channel);
                 if (permissions.HasPermission(Permissions.Administrator) || member.Id.ToString() == config.Value.Owner)
                 {
-
-
-
-                    Guild? guild = (from g in ctx.Source.Db.Guilds
-                        where g.GuildID == discord_guild.Id.ToString()
+                    
+                    Guild? guild = (from g in context.Db.Guilds
+                        where g.GuildID == discord_guild.Id
                         select g).FirstOrDefault();
 
                     if (guild == null)
@@ -96,8 +99,8 @@ namespace Aper_bot.Modules.Commands
 
                         logger.Information($"Registering guild: {discord_guild.Id}");
 
-                        ctx.Source.Db.Add(new Guild(discord_guild.Name, discord_guild.Id.ToString()));
-                        ctx.Source.Db.SaveChanges();
+                        context.Db.Add(new Guild(discord_guild.Name, discord_guild.Id.ToString()));
+                        context.Db.SaveChanges();
 
                         var embed = new DSharpPlus.Entities.DiscordEmbedBuilder()
                         {
@@ -117,6 +120,8 @@ namespace Aper_bot.Modules.Commands
             }
         }
         
+        
+        /*
         [CommandPermissionRequired(PermissionLevels.Admin)]
         private async Task SetRole(CommandContext<CommandExecutionContext> ctx, IMessageCreatedEvent discordMessageEvent)
         {

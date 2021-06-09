@@ -2,6 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Aper_bot.Database;
+using Aper_bot.Database.Model;
 using Aper_bot.EventBus;
 using Aper_bot.Events;
 using Aper_bot.Modules.CommandProcessing.Commands;
@@ -117,6 +118,15 @@ namespace Aper_bot.Modules.Discord
             {
                 var dbContext = scope.ServiceProvider.GetRequiredService<CoreDatabaseContext>();
 
+                if (messageCreateArgs.Guild != null && dbContext.GetGuildFor(messageCreateArgs.Guild.Id) is null)
+                {
+                    var discordGuild = messageCreateArgs.Guild;
+                    
+                    Log.LogInformation("Registering guild: {GuildID}",discordGuild.Id);
+
+                    dbContext.Add(new Guild(discordGuild.Name, discordGuild.Id.ToString()));
+                    dbContext.SaveChanges();
+                }
                 
                 var new_event = new DiscordMessageCreatedEvent(messageCreateArgs,dbContext);
 

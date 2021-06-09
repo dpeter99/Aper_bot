@@ -16,6 +16,12 @@ namespace Aper_bot.Util
         public static int[] GetIntArray(int num)
         {
             List<int> listOfInts = new List<int>();
+            if (num == 0)
+            {
+                listOfInts.Add(0);
+                return listOfInts.ToArray();
+            }
+            
             while(num > 0)
             {
                 listOfInts.Add(num % 10);

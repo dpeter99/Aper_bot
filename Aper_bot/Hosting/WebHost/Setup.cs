@@ -1,13 +1,20 @@
 ﻿using System;
+using System.IO;
+using System.Reflection;
+using Aper_bot.Hosting.WebHost.Infrastructure;
 using Aper_bot.Modules.DiscordSlash;
 using Certes;
 using FluffySpoon.AspNet.LetsEncrypt;
 using FluffySpoon.AspNet.LetsEncrypt.Certes;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.PlatformAbstractions;
+using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace Aper_bot.Hosting.WebHost
 {
@@ -59,14 +66,36 @@ namespace Aper_bot.Hosting.WebHost
 
             services.AddControllers().AddNewtonsoftJson();
 
+            services.AddApiVersioning(conf =>
+            {
+                conf.UseApiBehavior = false;
+                conf.AssumeDefaultVersionWhenUnspecified = false;
+                conf.DefaultApiVersion = new ApiVersion(1,0);
+                
+            });
+            services.AddVersionedApiExplorer(options =>
+            {
+                options.SubstituteApiVersionInUrl = true;
+                options.GroupNameFormat = "'v'VVV";
+            });
+            
+            services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
             // Register the Swagger generator, defining 1 or more Swagger documents
-            services.AddSwaggerGen();
+            services.AddSwaggerGen(options =>
+            {
+                // add a custom operation filter which sets default values
+                options.OperationFilter<SwaggerDefaultValues>();
+
+                // integrate xml comments
+                options.IncludeXmlComments( XmlCommentsFilePath );
+            } );
+            //services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
             
             services.AddScoped<DiscordValidationFilter>();
             
         }
         
-        public void Configure(IApplicationBuilder app)
+        public void Configure(IApplicationBuilder app, IApiVersionDescriptionProvider provider)
         {
             if (_conf.GetValue<bool>("Hosting:UseLetsEncrypt"))
             {
@@ -78,17 +107,11 @@ namespace Aper_bot.Hosting.WebHost
                 app.UseHttpsRedirection();
             }
 
-            // Enable middleware to serve generated Swagger as a JSON endpoint.
-            app.UseSwagger();
-
-            // Enable middleware to serve swagger-ui (HTML, JS, CSS, etc.),
-            // specifying the Swagger JSON endpoint.
-            app.UseSwaggerUI(c =>
-            {
-                c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
-            });
-
             app.UseRouting();
+
+            app.UseApiVersioning();
+            
+            
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
@@ -96,7 +119,32 @@ namespace Aper_bot.Hosting.WebHost
                 {
                     await context.Response.WriteAsync("Hello World!");
                 });
+
+                endpoints.MapHealthChecks("/health");
             });
+            
+            app.UseSwagger();
+            app.UseSwaggerUI(
+                options =>
+                {
+                    // build a swagger endpoint for each discovered API version
+                    foreach ( var description in provider.ApiVersionDescriptions )
+                    {
+                        options.SwaggerEndpoint( $"/swagger/{description.GroupName}/swagger.json", description.GroupName.ToUpperInvariant() );
+                    }
+                } );
+
+
+        }
+        
+        static string XmlCommentsFilePath
+        {
+            get
+            {
+                var basePath = PlatformServices.Default.Application.ApplicationBasePath;
+                var fileName = typeof( Setup ).GetTypeInfo().Assembly.GetName().Name + ".xml";
+                return Path.Combine( basePath, fileName );
+            }
         }
     }
 }

@@ -7,6 +7,6 @@ namespace Aper_bot.Hosting
     {
         void RegisterServices(HostBuilderContext ctx,IServiceCollection services);
 
-        bool IsAspRequiered() => false;
+        bool IsAspRequired() => false;
     }
 }

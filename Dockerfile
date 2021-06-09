@@ -20,6 +20,11 @@ RUN dotnet publish -c release -o /DockerOutput/Website
 
 # Final stage / image
 FROM mcr.microsoft.com/dotnet/aspnet:5.0
+
+#HEALTHCHECK CMD curl --fail http://localhost:80/health || exit
+
 WORKDIR /Aper_bot
 COPY --from=build /DockerOutput/Website ./
 ENTRYPOINT ["dotnet", "Aper_bot.dll"]
+
+
