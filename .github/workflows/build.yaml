@@ -33,11 +33,11 @@ jobs:
         dotnet-version: 5.0.x
         
     - name: Restore dependencies
-      run: dotnet restore
+      run: dotnet restore Aper_bot
       
     - name: Build
-      run: dotnet build --no-restore
+      run: dotnet build Aper_bot --no-restore
       
     - name: Test
-      run: dotnet test --no-build --verbosity normal
+      run: dotnet test Aper_bot.Test --no-build --verbosity normal
       
