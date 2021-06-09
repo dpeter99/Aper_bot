@@ -44,39 +44,12 @@ namespace Aper_bot.Modules.Commands.Rules
 
             quote.NextLiteral("make-sticky-post")
                 .ThisCalls(PlaceRules);
+            
+            quote.NextLiteral("show")
+                .NextArgument("num", new IntArgument())
+                .ThisCalls(SingleRule);
                 
             
-            /*
-            return l.Literal("rule")
-                .Then(l => l.Argument("id", Arguments.Integer(min: 0))
-                    .Executes(SingleRule)
-                )
-                .Then(r => r.Literal("add")
-                    .Then(a => a.Argument("text", Arguments.GreedyString())
-                        .Executes(AddRule)
-                    )
-                    .Then(s => s.Literal("at")
-                        .Then(n => n.Argument("num", Arguments.Integer())
-                            .Then(b => b.Argument("text", Arguments.GreedyString())
-                                .Executes(AddRule)
-                            )
-                        )
-                    )
-                )
-                .Then(r => r.Literal("remove")
-                    .Then(i => i.Argument("num", Arguments.Integer())
-                        .Executes(RemoveRule)
-                    )
-                )
-                .Then(l => l.Literal("list")
-                    .Executes(ListRules)
-                )
-                .Then(l => l.Literal("setup")
-                    .Then(p => p.Literal("place")
-                        .Executes(PlaceRules)
-                    )
-                );
-                */
             
             return new[] {quote};
             
@@ -215,25 +188,20 @@ namespace Aper_bot.Modules.Commands.Rules
         }
         
         
-        /*
-        async Task SingleRule(CommandContext<CommandExecutionContext> context, IMessageCreatedEvent discordMessageEvent)
+        [GuildRequiered]
+        async Task SingleRule(ParseResult result, IMessageCreatedEvent messageEvent)
         {
-            var guild = discordMessageEvent.Guild;
-            if (guild == null)
-            {
-                discordMessageEvent.RespondError("The server is not set up");
-                return;
-            }
+            var guild = messageEvent.Guild!;
 
-            var num = context.GetArgument<int>("id");
+            var num = result.GetIntArg("num");
 
-            await context.Source.Db.Entry(guild).Collection(g => g!.Rules).LoadAsync();
+            await messageEvent.Db.Entry(guild).Collection(g => g!.Rules).LoadAsync();
 
             guild!.Rules.Sort((a, b) => a.Number - b.Number);
             var rule = guild!.Rules.Find(r => r.Number == num);
             if (rule == null)
             {
-                discordMessageEvent.RespondError($"Could not find rule {num}");
+                await messageEvent.RespondError($"Could not find rule {num}");
                 return;
             }
 
@@ -243,60 +211,8 @@ namespace Aper_bot.Modules.Commands.Rules
             var embed = DiscordBot.Instance.BaseEmbed();
             embed.Description = text;
 
-            await discordMessageEvent.Respond(embed.Build());
+            await messageEvent.Respond(embed.Build());
         }
-        */
         
-        
-        
-        
-        /*
-        [CommandPermissionRequired(PermissionLevels.Admin)]
-        async Task AddRule(CommandContext<CommandExecutionContext> context, IMessageCreatedEvent discordMessageEvent)
-        {
-            var guild = discordMessageEvent.Guild;
-            if (guild == null)
-            {
-                GuildNotSetUp(discordMessageEvent);
-                return;
-            }
-
-            context.Source.Db.Attach(guild);
-            await context.Source.Db.Entry(guild).Collection(g => g!.Rules).LoadAsync();
-
-            guild.Rules.Sort((a, b) => a.Number - b.Number);
-
-            int num = discordMessageEvent.Guild!.Rules.Count + 1;
-
-            if (context.HasArgument<int>("num"))
-            {
-                num = context.GetArgument<int>("num");
-            }
-
-            if (guild.Rules.Exists(r => r.Number == num))
-            {
-                guild.Rules.Where(i => i.Number >= num).SetValue(r => r.Number++);
-                //remove gaps
-                //guild.Rules.ContinuouslyNumber(((guildRule, i) => guildRule.Number = i), 1);
-            }
-
-            string text = Arguments.GetString(context, "text");
-            discordMessageEvent.Guild.Rules.Add(new Database.Model.GuildRule(num, text));
-
-            context.Source.Db.Update(discordMessageEvent.Guild);
-            await context.Source.Db.SaveChangesAsync();
-
-            //TODO: Nicer embed response
-            await discordMessageEvent.Respond("Added");
-
-            await UpdateRules(discordMessageEvent);
-        }
-
-
-        private static void GuildNotSetUp(IMessageCreatedEvent source)
-        {
-            source.RespondError("The server is not set up");
-        }
-        */
     }
 }
