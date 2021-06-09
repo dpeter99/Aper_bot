@@ -20,9 +20,23 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: "Info"
+      - id: Lovercase name
+        uses: ASzc/change-string-case-action@v1
+        with:
+          string: ${{ github.repository }}
+
+      - name: PrepareReg Names
         run: |
-          echo {{github.event_name}}
+          DOCKER_IMAGE=AnderssonPeter/test-actions
+          echo IMAGE_REPOSITORY=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]') >> $GITHUB_ENV
+          echo IMAGE_TAG=$(echo ${{ github.ref }} | tr '[:upper:]' '[:lower:]' | awk '{split($0,a,"/"); print a[3]}') >> $GITHUB_ENV
+          echo ::set-output name=version::${VERSION}
+
+      - name: Echo Info
+        run: |
+          echo $GITHUB_ENV
+          echo ${{ github.repository }}
+          echo ${{ steps.string.outputs.lowercase }}
 
       - uses: actions/checkout@v2
     
@@ -51,6 +65,8 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     if: github.event_name == 'release'
+
+    needs: test
 
     steps:
       - name: Check out the repo
