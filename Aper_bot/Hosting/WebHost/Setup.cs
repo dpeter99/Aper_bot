@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.IO;
 using System.Reflection;
 using Aper_bot.Hosting.WebHost.Infrastructure;
@@ -105,6 +106,9 @@ namespace Aper_bot.Hosting.WebHost
         
         public void Configure(IApplicationBuilder app, IApiVersionDescriptionProvider provider)
         {
+            CultureInfo.DefaultThreadCurrentCulture = CultureInfo.GetCultureInfo("en-US");
+            CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.GetCultureInfo("en-US");
+            
             if (_conf.GetValue<bool>("Hosting:UseLetsEncrypt"))
             {
                 app.UseFluffySpoonLetsEncrypt();

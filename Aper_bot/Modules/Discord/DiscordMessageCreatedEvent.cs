@@ -26,6 +26,12 @@ namespace Aper_bot.Modules.Discord
             }
         }
 
+        public bool HasRefMessage => @event.Message.ReferencedMessage is not null;
+        public string? RefMessageText => @event.Message.ReferencedMessage.Content;
+        
+        public User? RefMessageAuthor { get; }
+        public DateTime? RefMessageTime => @event.Message.ReferencedMessage.Timestamp.DateTime;
+
         public DiscordMessageCreatedEvent(MessageCreateEventArgs args, Database.CoreDatabaseContext database) : base(args, database)
         {
             Guild = db.GetGuildFor(@event.Guild);
@@ -33,6 +39,11 @@ namespace Aper_bot.Modules.Discord
             Author = db.GetOrCreateUserFor(@event.Author);
 
             Message = args.Message.Content;
+
+            if (HasRefMessage)
+            {
+                RefMessageAuthor = db.GetOrCreateUserFor(@event.Message.ReferencedMessage.Author);
+            }
         }
 
         public async Task RespondError(string text)

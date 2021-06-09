@@ -38,40 +38,40 @@ namespace Aper_bot.Modules.Commands
 
         public override IEnumerable<CommandNode> Register()
         {
-            var quote = new LiteralNode("quote",new CommandMetaData(1));
+            var quote = new LiteralNode("quote", new CommandMetaData(1));
 
             //#### ADD ######
             var add = quote.NextLiteral("add");
             add.NextLiteral("anonymous")
-                .NextArgument("text",new LongStringArgument())
+                .NextArgument("text", new LongStringArgument())
                 .ThisCalls(new CommandFunction(AddQuote));
-            
+
             add.NextLiteral("from")
                 .NextArgument("source", DiscordArgumentTypes.User())
-                .NextArgument("text",new LongStringArgument())
+                .NextArgument("text", new LongStringArgument())
                 .ThisCalls(new CommandFunction(AddQuote));
+
+            add.NextLiteral("repl")
+                .ThisCalls(AddQuote);
 
             //#### LIST ######
             var list = quote.NextLiteral("get");
 
             list.NextLiteral("all").ThisCalls(new CommandFunction(ListQuotes));
 
-            
+
             //#### Specific number ######
             list.NextLiteral("num").NextArgument("number", new IntArgument()).ThisCalls(new CommandFunction(PrintQuote));
-            
+
             //#### REMOVE ######
             var remove = quote.NextLiteral("remove");
             remove.NextArgument("id", new IntArgument()).ThisCalls(new CommandFunction(RemoveQuote));
 
-            
-            
+
             return new[] {quote};
-            
         }
 
-      
-        
+
         [GuildRequiered]
         private async Task RemoveQuote(ParseResult result, IMessageCreatedEvent context)
         {
@@ -84,11 +84,11 @@ namespace Aper_bot.Modules.Commands
             var quote = (from q in db.Quotes
                 where q.number == num && q.GuildID == guild!.ID
                 select q).FirstOrDefault();
-            
+
             if (quote != null)
             {
                 await db.Entry(quote).Reference(r => r.Source).LoadAsync();
-                
+
                 guild!.Quotes.Remove(quote);
                 await db.SaveChangesAsync();
 
@@ -138,17 +138,17 @@ namespace Aper_bot.Modules.Commands
                     }
                     else
                     {
-                        embed.Timestamp = quote.CreationTime;
+                        embed.Timestamp = quote.EventTime;
                     }
-                    
+
                     embed.Author = new DiscordEmbedBuilder.EmbedAuthor();
                     if (quote.Source != null)
                     {
                         var discordGuild = await DiscordBot.Instance.Client.GetGuildAsync(guild.GuildID);
                         var sourceMember = await discordGuild.GetMemberAsync(ulong.Parse(quote.Source.UserID));
-                            
+
                         embed.Author.IconUrl = sourceMember.AvatarUrl;
-                        embed.Author.Name = sourceMember.Nickname;
+                        embed.Author.Name = sourceMember.Nickname ?? sourceMember.Username;
                     }
 
                     embed.Footer = new DiscordEmbedBuilder.EmbedFooter()
@@ -162,7 +162,7 @@ namespace Aper_bot.Modules.Commands
             }
         }
 
-        
+
         [GuildRequiered]
         private async Task ListQuotes(ParseResult result, IMessageCreatedEvent context)
         {
@@ -172,12 +172,12 @@ namespace Aper_bot.Modules.Commands
             if (guild != null)
             {
                 var discordGuildAsync = DiscordBot.Instance.Client.GetGuildAsync(guild.GuildID);
-                
+
                 string text = "";
-                
+
                 var q = from h in db.Quotes.Include(blog => blog.Source)
-                        where h.Guild == guild
-                        select h;
+                    where h.Guild == guild
+                    select h;
 
                 foreach (var quote in q)
                 {
@@ -186,7 +186,7 @@ namespace Aper_bot.Modules.Commands
                         var discordGuild = await discordGuildAsync;
                         var sourceMember = (await discordGuild.GetMemberAsync(ulong.Parse(quote.Source.UserID))).Nickname;
                         //var sourceMember = quote.Source.Name;
-                    
+
                         text += $"\n{EmojiHelper.Number(quote.number)} *{quote.Text}* - by {sourceMember}";
                     }
                     else
@@ -204,7 +204,7 @@ namespace Aper_bot.Modules.Commands
                 await context.Respond(embed.Build());
             }
         }
-        
+
 
         [GuildRequiered]
         private async Task AddQuote(ParseResult result, IMessageCreatedEvent context)
@@ -215,15 +215,37 @@ namespace Aper_bot.Modules.Commands
             User? source = null;
 
             DateTime date = context.Time;
+            DateTime eventTime = context.Time;
 
-            string text = result.Args["text"].ToString();
+            string text = "";
 
-
-            if (result.Args.ContainsKey("source"))
+            if (context.HasRefMessage)
             {
-                var user = (DiscordUser) result.Args["source"];
-                source = db.GetOrCreateUserFor(user);
+                text = context.RefMessageText!;
+                source = context.RefMessageAuthor ?? null;
+                eventTime = context.RefMessageTime?.Date ?? context.Time;
             }
+            else
+            {
+                if (result.Args.ContainsKey("text"))
+                {
+                    text = result.GetStringArg("text");
+                }
+
+                if (string.IsNullOrWhiteSpace(text))
+                {
+                    await context.RespondError("Dind't find text to quote");
+                    return;
+                }
+
+
+                if (result.Args.ContainsKey("source"))
+                {
+                    var user = (DiscordUser) result.Args["source"];
+                    source = db.GetOrCreateUserFor(user);
+                }
+            }
+
 
             await db.Entry(context.Guild).Collection(d => d!.Quotes).LoadAsync();
 
@@ -231,8 +253,7 @@ namespace Aper_bot.Modules.Commands
             var last = context.Guild.Quotes.LastOrDefault();
             var next_num = last?.number + 1 ?? 0;
 
-            var entity = new Quote(creator.ID, source?.ID, context.Guild.ID, date, DateTime.MinValue, text, null,
-                next_num);
+            var entity = new Quote(creator.ID, source?.ID, context.Guild.ID, date, eventTime, text, null, next_num);
             db.Add(entity);
 
             var embed = DiscordBot.Instance.BaseEmbed();
@@ -248,7 +269,5 @@ namespace Aper_bot.Modules.Commands
 
             await db.SaveChangesAsync();
         }
-        
-        
     }
 }

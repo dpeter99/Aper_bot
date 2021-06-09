@@ -13,6 +13,7 @@ namespace Aper_bot.Modules.DiscordSlash
 {
     public class SlashMessageEvent : CommandSourceStack<Interaction>, IMessageCreatedEvent
     {
+        private readonly Interaction _args;
         public Snowflake InteractionID { get; }
 
         public string InteractionToken { get; }
@@ -22,12 +23,24 @@ namespace Aper_bot.Modules.DiscordSlash
         public Guild? Guild { get; }
         public User Author { get; }
         public string Message { get; }
-        public DateTime Time { get; }
+        public DateTime Time
+        {
+            get
+            {
+                var ticks = (InteractionID >> 22) + 1420070400000;
+                return DateTimeOffset.FromUnixTimeMilliseconds(ticks).DateTime;
+            }
+        }
 
-        
+        public bool HasRefMessage => false;
+        public string? RefMessageText => null;
+        public User? RefMessageAuthor => null;
+        public DateTime? RefMessageTime  => null;
+
 
         public SlashMessageEvent(Interaction args, CoreDatabaseContext database) : base(args, database)
         {
+            _args = args;
             InteractionID = args.Id;
             InteractionToken = args.Token;
             Guild = db.GetGuildFor(args.GuildId);
