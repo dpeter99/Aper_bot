@@ -43,6 +43,13 @@ namespace Aper_bot.Modules.DiscordSlash
                 var byteKey = HexConverter.HexStringToByteArray(_settings.Value.PublicKey);
                 // ... read the body from the request ...
 
+                if (byteSig.Length < 1 || byteKey.Length < 1)
+                {
+                    _logger.LogWarning("Failed to validate POST request for Discord API.");
+                    context.Result = new UnauthorizedResult();
+                    return;
+                }
+                
 
                 var raw = request.BodyToString();
                 /*

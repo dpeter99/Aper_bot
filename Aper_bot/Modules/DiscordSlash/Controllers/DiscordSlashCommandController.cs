@@ -17,25 +17,41 @@ using JsonSerializer = Newtonsoft.Json.JsonSerializer;
 
 namespace Aper_bot.Modules.DiscordSlash.Controllers
 {
+    /// <summary>
+    /// This webhook is used by Discord to communicate the 
+    /// </summary>
     [Route("api/discordslash")]
     [ApiController]
-    
-    //[ApiVersion("1.0")]
     [ApiVersionNeutral]
     public class DiscordSlashCommandController : ControllerBase
     {
         private readonly ILogger _logger;
         private readonly SlashCommandExecutor _slashModule;
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="logger"></param>
+        /// <param name="slashModule"></param>
         public DiscordSlashCommandController(ILogger<DiscordSlashCommandController> logger, SlashCommandExecutor slashModule)
         {
             _logger = logger;
             _slashModule = slashModule;
         }
         
+        /// <summary>
+        /// This endpoint handles the incoming discord slash command interactions. It uses the request body for the data, but it needs to be validated.
+        /// </summary>
+        /// <remarks>
+        /// This endpoint should only be used by Discord for delivering interaction data.
+        /// The data in the body needs to be signed by discord to work.
+        /// </remarks>
+        /// <response code="401">The signature couldn't be validated</response>
+        /// <response code="200">Returns the responses for the interaction</response>
+        /// <returns>The response to the interaction</returns>
         [HttpPost]
         [ServiceFilter(typeof(DiscordValidationFilter))]
-        //[ApiExplorerSettings(IgnoreApi = true)]
+        [Produces("application/json")]
         public async Task<IActionResult> DiscordEndpointHandler()
         {
             using var reader = new StreamReader(Request.Body);

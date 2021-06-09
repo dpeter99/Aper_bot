@@ -64,6 +64,14 @@ namespace Aper_bot.Hosting.WebHost
                 services.AddFluffySpoonLetsEncryptMemoryChallengePersistence();
             }
 
+            services.AddCors(s =>
+            {
+                s.AddDefaultPolicy(p =>
+                {
+                    p.AllowAnyOrigin();
+                });
+            });
+            
             services.AddControllers().AddNewtonsoftJson();
 
             services.AddApiVersioning(conf =>
@@ -89,7 +97,7 @@ namespace Aper_bot.Hosting.WebHost
                 // integrate xml comments
                 options.IncludeXmlComments( XmlCommentsFilePath );
             } );
-            //services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
+            
             
             services.AddScoped<DiscordValidationFilter>();
             
@@ -107,6 +115,8 @@ namespace Aper_bot.Hosting.WebHost
                 app.UseHttpsRedirection();
             }
 
+            app.UseCors();
+            
             app.UseRouting();
 
             app.UseApiVersioning();
